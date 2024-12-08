@@ -1,0 +1,72 @@
+# {{name}}
+
+## Description
+Add your project description here.
+
+## Prerequisites
+- C++ compiler with C++{{cpp_standard}} support
+- {{build_system}}
+
+## Building the Project
+
+{{#if (eq build_system "CMake")}}
+```bash
+# Create a build directory
+mkdir -p build && cd build
+
+# Generate build files
+cmake ..
+
+# Build the project
+cmake --build .
+
+# Run the executable
+./{{name}}
+```
+{{else}}
+```bash
+# Build the project
+make
+
+# Run the executable
+./{{name}}
+```
+{{/if}}
+
+## Project Structure
+
+{{#if is_library}}
+```
+src/          # Source files
+├── lib.cpp   # Library implementation
+include/      # Header files
+├── *.hpp     # Public headers
+build/        # Build output directory
+tests/        # Test files
+examples/     # Example usage
+```
+{{else}}
+```
+src/          # Source files
+├── main.cpp  # Main application entry point
+include/      # Header files
+build/        # Build output directory
+tests/        # Test files
+assets/       # Application assets
+```
+{{/if}}
+
+## Testing
+{{#if (eq build_system "CMake")}}
+```bash
+# In the build directory
+ctest
+```
+{{else}}
+```bash
+make test
+```
+{{/if}}
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.

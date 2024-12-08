@@ -7,9 +7,11 @@ description = "An interactive C++ project generator"
 license = "MIT"
 
 [dependencies]
-inquire = "0.7"                                   # For interactive CLI prompts
-anyhow = "1.0"                                    # For error handling
-indicatif = "0.17"                                # For progress bars
-clap = { version = "4.4", features = ["derive"] } # For CLI argument parsing
-which = "7.0"                                     # For checking if tools are installed
-regex = "1.10"                                    # For version parsing
+inquire = "0.7"                                    # For interactive CLI prompts
+anyhow = "1.0"                                     # For error handling
+indicatif = "0.17"                                 # For progress bars
+clap = { version = "4.4", features = ["derive"] }  # For CLI argument parsing
+which = "7.0"                                      # For checking if tools are installed
+regex = "1.10"                                     # For version parsing
+handlebars = "6.2"
+serde = { version = "1.0", features = ["derive"] }

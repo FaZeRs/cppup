@@ -1,0 +1,42 @@
+cmake_minimum_required(VERSION 3.15)
+project({{name}} LANGUAGES CXX)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD {{cpp_standard}})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Add compiler warnings
+if(MSVC)
+    add_compile_options(/W4)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# Enable testing
+enable_testing()
+
+{{#if is_library}}
+# Library
+add_library(${PROJECT_NAME} STATIC
+    src/lib.cpp
+)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
+
+# Example executable
+add_executable(${PROJECT_NAME}_example examples/example.cpp)
+target_link_libraries(${PROJECT_NAME}_example PRIVATE ${PROJECT_NAME})
+{{else}}
+# Main executable
+add_executable(${PROJECT_NAME} src/main.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE include)
+{{/if}}
+
+# Tests
+add_executable(${PROJECT_NAME}_tests tests/main_test.cpp)
+{{#if is_library}}
+target_link_libraries(${PROJECT_NAME}_tests PRIVATE ${PROJECT_NAME})
+{{else}}
+target_include_directories(${PROJECT_NAME}_tests PRIVATE include)
+{{/if}}
+add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)

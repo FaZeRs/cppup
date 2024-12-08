@@ -1,0 +1,51 @@
+CXX = g++
+CXXFLAGS = -std=c++{{cpp_standard}} -Wall -Wextra -Wpedantic
+{{#if is_library}}
+INCLUDES = -Iinclude
+{{/if}}
+
+{{#if is_library}}
+# Library settings
+LIB_SOURCES = $(wildcard src/*.cpp)
+LIB_OBJECTS = $(LIB_SOURCES:.cpp=.o)
+LIB_NAME = lib{{name}}.a
+
+# Example settings
+EXAMPLE_SOURCES = examples/example.cpp
+EXAMPLE_OBJECTS = $(EXAMPLE_SOURCES:.cpp=.o)
+EXAMPLE_NAME = example
+
+all: $(LIB_NAME) $(EXAMPLE_NAME)
+
+$(LIB_NAME): $(LIB_OBJECTS)
+	ar rcs $@ $^
+
+$(EXAMPLE_NAME): $(EXAMPLE_OBJECTS) $(LIB_NAME)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDES)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDES)
+
+clean:
+	rm -f $(LIB_OBJECTS) $(EXAMPLE_OBJECTS) $(LIB_NAME) $(EXAMPLE_NAME)
+
+.PHONY: all clean
+{{else}}
+# Executable settings
+SOURCES = $(wildcard src/*.cpp)
+OBJECTS = $(SOURCES:.cpp=.o)
+EXECUTABLE = {{name}}
+
+all: $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(EXECUTABLE)
+
+.PHONY: all clean
+{{/if}}

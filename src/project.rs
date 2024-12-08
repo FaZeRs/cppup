@@ -1,4 +1,5 @@
 use crate::cli::Cli;
+use crate::templates::{create_template_registry, ProjectTemplateData};
 use anyhow::{Context, Result};
 use inquire::validator::Validation;
 use inquire::{Confirm, Select, Text};
@@ -220,142 +221,13 @@ impl ProjectConfig {
     }
 
     pub fn generate_cmake_file(&self) -> Result<()> {
-        let cmake_version = "3.15";
-        let cpp_standard = self.cpp_standard.to_string();
-
-        let cmake_content = match self.project_type {
-            ProjectType::Executable => format!(
-                r#"cmake_minimum_required(VERSION {})
-project({} LANGUAGES CXX)
-
-# Set C++ standard
-set(CMAKE_CXX_STANDARD {})
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Add compiler warnings
-if(MSVC)
-    add_compile_options(/W4)
-else()
-    add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
-# Enable testing
-enable_testing()
-
-# Main executable
-add_executable(${{PROJECT_NAME}} src/main.cpp)
-target_include_directories(${{PROJECT_NAME}} PRIVATE include)
-
-# Tests
-add_executable(${{PROJECT_NAME}}_tests tests/main_test.cpp)
-target_include_directories(${{PROJECT_NAME}}_tests PRIVATE include)
-add_test(NAME ${{PROJECT_NAME}}_tests COMMAND ${{PROJECT_NAME}}_tests)
-"#,
-                cmake_version, self.name, cpp_standard
-            ),
-            ProjectType::Library => format!(
-                r#"cmake_minimum_required(VERSION {})
-project({} LANGUAGES CXX)
-
-# Set C++ standard
-set(CMAKE_CXX_STANDARD {})
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Add compiler warnings
-if(MSVC)
-    add_compile_options(/W4)
-else()
-    add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
-# Enable testing
-enable_testing()
-
-# Library
-add_library(${{PROJECT_NAME}} STATIC
-    src/lib.cpp
-)
-target_include_directories(${{PROJECT_NAME}} PUBLIC include)
-
-# Example executable
-add_executable(${{PROJECT_NAME}}_example examples/example.cpp)
-target_link_libraries(${{PROJECT_NAME}}_example PRIVATE ${{PROJECT_NAME}})
-
-# Tests
-add_executable(${{PROJECT_NAME}}_tests tests/lib_test.cpp)
-target_link_libraries(${{PROJECT_NAME}}_tests PRIVATE ${{PROJECT_NAME}})
-add_test(NAME ${{PROJECT_NAME}}_tests COMMAND ${{PROJECT_NAME}}_tests)
-"#,
-                cmake_version, self.name, cpp_standard
-            ),
-        };
-
-        fs::write(self.path.join("CMakeLists.txt"), cmake_content)
-            .context("Failed to write CMakeLists.txt")?;
+        self.render_template("CMakeLists.txt", &self.path.join("CMakeLists.txt"))?;
 
         Ok(())
     }
 
     pub fn generate_makefile(&self) -> Result<()> {
-        let cpp_standard = match self.cpp_standard {
-            CppStandard::Cpp11 => "11",
-            CppStandard::Cpp14 => "14",
-            CppStandard::Cpp17 => "17",
-            CppStandard::Cpp20 => "20",
-            CppStandard::Cpp23 => "23",
-        };
-
-        let makefile_content = match self.project_type {
-            ProjectType::Executable => format!(
-                r#"CXX = g++
-CXXFLAGS = -std=c++{} -Wall -Wextra -I include
-TARGET = {}
-BUILD_DIR = build
-
-SRCS = $(wildcard src/*.cpp)
-OBJS = $(SRCS:%.cpp=$(BUILD_DIR)/%.o)
-
-$(TARGET): $(OBJS)
-	$(CXX) $(OBJS) -o $(BUILD_DIR)/$(TARGET)
-
-$(BUILD_DIR)/%.o: %.cpp
-	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-.PHONY: clean
-clean:
-	rm -rf $(BUILD_DIR)
-"#,
-                cpp_standard, self.name
-            ),
-            ProjectType::Library => format!(
-                r#"CXX = g++
-CXXFLAGS = -std=c++{} -Wall -Wextra -I include
-LIB_TARGET = lib{}.a
-BUILD_DIR = build
-
-SRCS = $(wildcard src/*.cpp)
-OBJS = $(SRCS:%.cpp=$(BUILD_DIR)/%.o)
-
-$(LIB_TARGET): $(OBJS)
-	ar rcs $(BUILD_DIR)/$(LIB_TARGET) $(OBJS)
-
-$(BUILD_DIR)/%.o: %.cpp
-	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-.PHONY: clean
-clean:
-	rm -rf $(BUILD_DIR)
-"#,
-                cpp_standard, self.name
-            ),
-        };
-
-        fs::write(self.path.join("Makefile"), makefile_content)
-            .context("Failed to write Makefile")?;
+        self.render_template("Makefile", &self.path.join("Makefile"))?;
 
         Ok(())
     }
@@ -363,79 +235,24 @@ clean:
     pub fn generate_source_files(&self) -> Result<()> {
         match self.project_type {
             ProjectType::Executable => {
-                let main_content = r#"#include <iostream>
-
-int main() {
-    std::cout << "Hello, World!\n";
-    return 0;
-}
-"#;
-                let test_content = r#"#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest.h"
-
-TEST_CASE("Basic test") {
-    CHECK(1 + 1 == 2);
-}
-"#;
-                fs::write(self.path.join("src/main.cpp"), main_content)
-                    .context("Failed to write main.cpp")?;
-                fs::write(self.path.join("tests/main_test.cpp"), test_content)
-                    .context("Failed to write main_test.cpp")?;
+                self.render_template("main.cpp", &self.path.join("src/main.cpp"))?;
             }
             ProjectType::Library => {
-                let header_content = format!(
-                    r#"#pragma once
-
-namespace {} {{
-
-class Calculator {{
-public:
-    static int add(int a, int b);
-}};
-
-}} // namespace {}
-"#,
-                    self.name, self.name
-                );
-
-                let source_content = format!(
-                    r#"#include "{}.hpp"
-
-namespace {} {{
-
-int Calculator::add(int a, int b) {{
-    return a + b;
-}}
-
-}} // namespace {}
-"#,
-                    self.name, self.name, self.name
-                );
-
-                let example_content = format!(
-                    r#"#include <iostream>
-#include "{}.hpp"
-
-int main() {{
-    int result = {}::Calculator::add(40, 2);
-    std::cout << "40 + 2 = " << result << "\n";
-    return 0;
-}}
-"#,
-                    self.name, self.name
-                );
-
-                fs::write(
-                    self.path.join(format!("include/{}.hpp", self.name)),
-                    header_content,
-                )
-                .context("Failed to write header file")?;
-                fs::write(self.path.join("src/lib.cpp"), source_content)
-                    .context("Failed to write library source file")?;
-                fs::write(self.path.join("examples/example.cpp"), example_content)
-                    .context("Failed to write example file")?;
+                self.render_template(
+                    "header.hpp",
+                    &self.path.join(format!("include/{}.hpp", self.name)),
+                )?;
+                self.render_template("library.cpp", &self.path.join("src/lib.cpp"))?;
+                self.render_template("example.cpp", &self.path.join("examples/example.cpp"))?;
             }
         }
+
+        Ok(())
+    }
+
+    pub fn generate_test_files(&self) -> Result<()> {
+        self.render_template("main_test.cpp", &self.path.join("tests/main_test.cpp"))?;
+
         Ok(())
     }
 
@@ -447,120 +264,13 @@ int main() {{
                 .output()
                 .context("Failed to initialize git repository")?;
 
-            let gitignore_content = r#"# Build directory
-build/
-
-# IDE specific files
-.vscode/
-.idea/
-*.swp
-*~
-
-# Compiled files
-*.o
-*.out
-*.exe
-*.dll
-*.so
-*.dylib
-
-# CMake files
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-compile_commands.json
-"#;
-
-            fs::write(self.path.join(".gitignore"), gitignore_content)
-                .context("Failed to write .gitignore")?;
+            self.render_template("gitignore", &self.path.join(".gitignore"))?;
         }
         Ok(())
     }
 
     pub fn generate_readme(&self) -> Result<()> {
-        let build_instructions = match self.build_system {
-            BuildSystem::CMake => format!(
-                r#"```bash
-# Create a build directory
-mkdir -p build && cd build
-
-# Generate build files
-cmake ..
-
-# Build the project
-cmake --build .
-
-# Run the executable
-./{}{}
-</code_block_to_apply_changes_from>
-"#,
-                self.name, self.cpp_standard
-            ),
-            BuildSystem::Make => format!(
-                r#"```bash
-# Create a build directory
-mkdir -p build && cd build
-
-# Build the project
-make
-
-# Run the executable
-./{}
-</code_block_to_apply_changes_from>
-"#,
-                self.name
-            ),
-        };
-
-        let project_structure = match self.project_type {
-            ProjectType::Executable => {
-                r#"
-```
-src/          # Source files
-├── main.cpp  # Main application entry point
-include/      # Header files
-build/        # Build output directory
-tests/        # Test files
-assets/       # Application assets
-```"#
-            }
-            ProjectType::Library => {
-                r#"
-```
-src/          # Source files
-├── lib.cpp   # Library implementation
-include/      # Header files
-├── *.hpp     # Public headers
-build/        # Build output directory
-tests/        # Test files
-examples/     # Example usage
-```"#
-            }
-        };
-
-        let readme_content = format!(
-            r#"# {}
-
-## Description
-Add your project description here.
-
-## Building the Project
-
-### Prerequisites
-- C++ compiler with C++{} support
-- {}
-
-### Build Instructions
-{}
-
-### Project Structure
-{}
-"#,
-            self.name, self.cpp_standard, self.build_system, build_instructions, project_structure
-        );
-
-        fs::write(self.path.join("README.md"), readme_content)
-            .context("Failed to write README.md")?;
+        self.render_template("README.md", &self.path.join("README.md"))?;
 
         Ok(())
     }
@@ -631,15 +341,35 @@ Add your project description here.
     }
 
     pub fn generate_clang_format(&self) -> Result<()> {
-        let clang_format_content = r#"---
-Language: Cpp
-BasedOnStyle: Google
-IndentWidth: 4
-ColumnLimit: 100
----"#;
+        self.render_template("clang-format", &self.path.join(".clang-format"))?;
 
-        fs::write(self.path.join(".clang-format"), clang_format_content)
-            .context("Failed to write .clang-format")?;
+        Ok(())
+    }
+
+    fn create_template_data(&self) -> ProjectTemplateData {
+        ProjectTemplateData {
+            name: self.name.clone(),
+            cpp_standard: self.cpp_standard.to_string(),
+            is_library: matches!(self.project_type, ProjectType::Library),
+            namespace: self.name.replace('-', "_"),
+            build_system: self.build_system.to_string(),
+            description: Some("A C++ project generated with cppup".to_string()),
+            author: std::env::var("USER").ok(),
+            version: "0.1.0".to_string(),
+            license: Some("MIT".to_string()),
+        }
+    }
+
+    fn render_template(&self, template_name: &str, path: &PathBuf) -> Result<()> {
+        let handlebars = create_template_registry();
+        let template_data = self.create_template_data();
+
+        let rendered = handlebars
+            .render(template_name, &template_data)
+            .with_context(|| format!("Failed to render template {}", template_name))?;
+
+        fs::write(path, rendered)
+            .with_context(|| format!("Failed to write file {}", path.display()))?;
 
         Ok(())
     }

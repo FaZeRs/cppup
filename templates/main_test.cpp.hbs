@@ -1,0 +1,48 @@
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+
+{{#if is_library}}
+#include "{{name}}.hpp"
+
+TEST_CASE("Calculator tests") {
+    using namespace {{namespace}};
+    
+    SUBCASE("Addition") {
+        CHECK(Calculator::add(2, 2) == 4);
+        CHECK(Calculator::add(-1, 1) == 0);
+        CHECK(Calculator::add(0, 0) == 0);
+    }
+    
+    SUBCASE("Subtraction") {
+        CHECK(Calculator::subtract(2, 2) == 0);
+        CHECK(Calculator::subtract(5, 3) == 2);
+        CHECK(Calculator::subtract(0, 0) == 0);
+    }
+    
+    SUBCASE("Multiplication") {
+        CHECK(Calculator::multiply(2, 3) == 6);
+        CHECK(Calculator::multiply(-2, 3) == -6);
+        CHECK(Calculator::multiply(0, 5) == 0);
+    }
+    
+    SUBCASE("Division") {
+        CHECK(Calculator::divide(6, 2) == 3.0);
+        CHECK(Calculator::divide(5, 2) == 2.5);
+        CHECK(Calculator::divide(0, 5) == 0.0);
+    }
+}
+{{else}}
+TEST_CASE("Basic tests") {
+    SUBCASE("Simple arithmetic") {
+        CHECK(1 + 1 == 2);
+        CHECK(2 * 3 == 6);
+        CHECK(10 - 5 == 5);
+    }
+    
+    SUBCASE("Boolean logic") {
+        CHECK(true);
+        CHECK_FALSE(false);
+        CHECK(42 > 0);
+    }
+}
+{{/if}}

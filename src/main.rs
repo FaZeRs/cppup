@@ -1,5 +1,6 @@
 mod cli;
 mod project;
+mod templates;
 
 use crate::cli::Cli;
 use crate::project::{BuildSystem, CppStandard, ProjectConfig, ProjectType};
@@ -16,7 +17,7 @@ fn generate_project(config: &ProjectConfig) -> Result<()> {
     println!("Initialize Git: {}", config.use_git);
     println!("Project Path: {}", config.path.display());
 
-    let pb = ProgressBar::new(6);
+    let pb = ProgressBar::new(7);
     pb.set_style(
         ProgressStyle::default_bar()
             .template("{spinner:.green} [{bar:40.cyan/blue}] {pos}/{len} {msg}")
@@ -40,6 +41,11 @@ fn generate_project(config: &ProjectConfig) -> Result<()> {
     // Generate source files
     pb.set_message("Generating source files...");
     config.generate_source_files()?;
+    pb.inc(1);
+
+    // Generate test files
+    pb.set_message("Generating test files...");
+    config.generate_test_files()?;
     pb.inc(1);
 
     // Generate README

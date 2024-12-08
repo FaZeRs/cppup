@@ -1,0 +1,16 @@
+#include <iostream>
+#include "{{name}}.hpp"
+
+int main() {
+    using namespace {{namespace}};
+    
+    std::cout << "Calculator Example\n";
+    std::cout << "-----------------\n";
+    
+    std::cout << "40 + 2 = " << Calculator::add(40, 2) << '\n';
+    std::cout << "40 - 2 = " << Calculator::subtract(40, 2) << '\n';
+    std::cout << "40 * 2 = " << Calculator::multiply(40, 2) << '\n';
+    std::cout << "40 / 2 = " << Calculator::divide(40, 2) << '\n';
+    
+    return 0;
+}

@@ -1,0 +1,47 @@
+# Build directories
+build/
+bin/
+lib/
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Compiled Object files
+*.o
+*.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+{{#unless is_library}}
+{{name}}
+{{/unless}}
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# Make
+Makefile.bak
+
+# Dependency directories
+deps/
+vendor/
+
+# OS specific
+.DS_Store
+.directory
