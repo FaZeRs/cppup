@@ -15,6 +15,7 @@ pub struct ProjectConfig {
     pub cpp_standard: CppStandard,
     pub use_git: bool,
     pub path: PathBuf,
+    pub enable_tests: bool,
 }
 
 #[derive(Debug)]
@@ -185,6 +186,10 @@ impl ProjectConfig {
             .with_default(true)
             .prompt()?;
 
+        let enable_tests = Confirm::new("Do you want to include unit tests?")
+            .with_default(true)
+            .prompt()?;
+
         Ok(ProjectConfig {
             name,
             project_type,
@@ -192,6 +197,7 @@ impl ProjectConfig {
             cpp_standard,
             use_git,
             path: project_path,
+            enable_tests,
         })
     }
 
@@ -201,16 +207,18 @@ impl ProjectConfig {
             .with_context(|| format!("Failed to create project directory at {:?}", self.path))?;
 
         // Create standard directories
-        let dirs = vec![
+        let mut dirs = vec![
             "src",
             "include",
-            "build",
-            "tests",
             match self.project_type {
                 ProjectType::Library => "examples",
                 ProjectType::Executable => "assets",
             },
         ];
+
+        if self.enable_tests {
+            dirs.push("tests");
+        }
 
         for dir in dirs {
             fs::create_dir_all(self.path.join(dir))
@@ -251,8 +259,9 @@ impl ProjectConfig {
     }
 
     pub fn generate_test_files(&self) -> Result<()> {
-        self.render_template("main_test.cpp", &self.path.join("tests/main_test.cpp"))?;
-
+        if self.enable_tests {
+            self.render_template("main_test.cpp", &self.path.join("tests/main_test.cpp"))?;
+        }
         Ok(())
     }
 
@@ -357,6 +366,7 @@ impl ProjectConfig {
             author: std::env::var("USER").ok(),
             version: "0.1.0".to_string(),
             license: Some("MIT".to_string()),
+            enable_tests: self.enable_tests,
         }
     }
 

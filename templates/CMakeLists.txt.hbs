@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD {{cpp_standard}})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
 # Add compiler warnings
 if(MSVC)
     add_compile_options(/W4)
@@ -13,8 +17,20 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-g)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-O3)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    add_compile_options(-O2 -g)
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+    add_compile_options(-Os)
+endif()
+
+{{#if enable_tests}}
 # Enable testing
 enable_testing()
+{{/if}}
 
 {{#if is_library}}
 # Library
@@ -32,6 +48,7 @@ add_executable(${PROJECT_NAME} src/main.cpp)
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 {{/if}}
 
+{{#if enable_tests}}
 # Tests
 add_executable(${PROJECT_NAME}_tests tests/main_test.cpp)
 {{#if is_library}}
@@ -40,3 +57,4 @@ target_link_libraries(${PROJECT_NAME}_tests PRIVATE ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}_tests PRIVATE include)
 {{/if}}
 add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
+{{/if}}

@@ -31,4 +31,7 @@ pub struct Cli {
     /// Non-interactive mode
     #[arg(short = 'i', long)]
     pub non_interactive: bool,
+
+    #[arg(long, default_value_t = true)]
+    pub enable_tests: bool,
 }

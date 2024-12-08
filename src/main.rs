@@ -109,6 +109,7 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
         cpp_standard,
         use_git: cli.git,
         path,
+        enable_tests: cli.enable_tests,
     })
 }
 

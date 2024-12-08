@@ -42,7 +42,9 @@ src/          # Source files
 include/      # Header files
 ├── *.hpp     # Public headers
 build/        # Build output directory
+{{#if enable_tests}}
 tests/        # Test files
+{{/if}}
 examples/     # Example usage
 ```
 {{else}}
@@ -51,11 +53,14 @@ src/          # Source files
 ├── main.cpp  # Main application entry point
 include/      # Header files
 build/        # Build output directory
+{{#if enable_tests}}
 tests/        # Test files
+{{/if}}
 assets/       # Application assets
 ```
 {{/if}}
 
+{{#if enable_tests}}
 ## Testing
 {{#if (eq build_system "CMake")}}
 ```bash
@@ -67,6 +72,6 @@ ctest
 make test
 ```
 {{/if}}
-
+{{/if}}
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.

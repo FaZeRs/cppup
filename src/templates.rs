@@ -12,19 +12,11 @@ pub struct ProjectTemplateData {
     pub author: Option<String>,
     pub version: String,
     pub license: Option<String>,
+    pub enable_tests: bool,
 }
 
 pub fn create_template_registry() -> Handlebars<'static> {
     let mut handlebars = Handlebars::new();
-
-    // Register helper functions
-    // handlebars.register_helper(
-    //     "lowercase",
-    //     Box::new(|h: &Helper| {
-    //         let param = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("");
-    //         Ok(param.to_lowercase().into())
-    //     }),
-    // );
 
     // Register all templates with proper error handling
     let templates = vec![
