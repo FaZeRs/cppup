@@ -3,7 +3,7 @@ mod project;
 mod templates;
 
 use crate::cli::Cli;
-use crate::project::{BuildSystem, CppStandard, ProjectConfig, ProjectType};
+use crate::project::{BuildSystem, CppStandard, PackageManager, ProjectConfig, ProjectType};
 use anyhow::{Context, Result};
 use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
@@ -14,10 +14,12 @@ fn generate_project(config: &ProjectConfig) -> Result<()> {
     println!("Project Type: {:?}", config.project_type);
     println!("Build System: {:?}", config.build_system);
     println!("C++ Standard: {:?}", config.cpp_standard);
+    println!("Enable Tests: {}", config.enable_tests);
+    println!("Package Manager: {:?}", config.package_manager);
     println!("Initialize Git: {}", config.use_git);
     println!("Project Path: {}", config.path.display());
 
-    let pb = ProgressBar::new(7);
+    let pb = ProgressBar::new(8);
     pb.set_style(
         ProgressStyle::default_bar()
             .template("{spinner:.green} [{bar:40.cyan/blue}] {pos}/{len} {msg}")
@@ -41,6 +43,11 @@ fn generate_project(config: &ProjectConfig) -> Result<()> {
     // Generate source files
     pb.set_message("Generating source files...");
     config.generate_source_files()?;
+    pb.inc(1);
+
+    // Generate package manager files
+    pb.set_message("Setting up package manager...");
+    config.generate_package_manager_files()?;
     pb.inc(1);
 
     // Generate test files
@@ -102,6 +109,12 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
 
     let path = cli.path.join(&name);
 
+    let package_manager = match cli.package_manager.as_str() {
+        "conan" => PackageManager::Conan,
+        "vcpkg" => PackageManager::Vcpkg,
+        _ => PackageManager::None,
+    };
+
     Ok(ProjectConfig {
         name,
         project_type,
@@ -110,6 +123,7 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
         use_git: cli.git,
         path,
         enable_tests: cli.enable_tests,
+        package_manager,
     })
 }
 
@@ -134,15 +148,31 @@ fn main() -> Result<()> {
     // Print next steps
     println!("\nNext steps:");
     println!("1. cd {}", config.path.display());
-    match config.build_system {
-        BuildSystem::CMake => {
+
+    match config.package_manager {
+        PackageManager::Conan => {
             println!("2. mkdir build && cd build");
-            println!("3. cmake ..");
+            println!("3. conan install .. --output-folder=. --build=missing");
+            println!("4. cmake .. -DCMAKE_TOOLCHAIN_FILE=./conan_toolchain.cmake");
+            println!("5. cmake --build .");
+        }
+        PackageManager::Vcpkg => {
+            println!("2. mkdir build && cd build");
+            println!(
+                "3. cmake .. -DCMAKE_TOOLCHAIN_FILE=${{VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake"
+            );
             println!("4. cmake --build .");
         }
-        BuildSystem::Make => {
-            println!("2. make");
-        }
+        PackageManager::None => match config.build_system {
+            BuildSystem::CMake => {
+                println!("2. mkdir build && cd build");
+                println!("3. cmake ..");
+                println!("4. cmake --build .");
+            }
+            BuildSystem::Make => {
+                println!("2. make");
+            }
+        },
     }
 
     Ok(())

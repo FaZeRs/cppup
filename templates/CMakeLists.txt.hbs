@@ -1,4 +1,19 @@
 cmake_minimum_required(VERSION 3.15)
+
+{{#if (eq package_manager "Conan")}}
+# Conan setup
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+    message(FATAL_ERROR "The file conan_toolchain.cmake doesn't exist. Please run 'conan install .' first")
+endif()
+include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+{{/if}}
+
+{{#if (eq package_manager "Vcpkg")}}
+# Vcpkg setup
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    CACHE STRING "Vcpkg toolchain file")
+{{/if}}
+
 project({{name}} LANGUAGES CXX)
 
 # Set C++ standard

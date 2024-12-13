@@ -34,4 +34,7 @@ pub struct Cli {
 
     #[arg(long, default_value_t = true)]
     pub enable_tests: bool,
+
+    #[arg(long, value_parser = ["conan", "vcpkg", "none"], default_value = "none")]
+    pub package_manager: String,
 }

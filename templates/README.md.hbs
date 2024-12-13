@@ -6,11 +6,22 @@ Add your project description here.
 ## Prerequisites
 - C++ compiler with C++{{cpp_standard}} support
 - {{build_system}}
+{{#if (eq package_manager "Conan")}}
+- Conan
+{{/if}}
+{{#if (eq package_manager "Vcpkg")}}
+- Vcpkg
+{{/if}}
 
 ## Building the Project
 
 {{#if (eq build_system "CMake")}}
 ```bash
+{{#if (eq package_manager "Conan")}}
+# Conan setup
+conan install .. --output-folder=. --build=missing
+{{/if}}
+
 # Create a build directory
 mkdir -p build && cd build
 
@@ -73,5 +84,6 @@ make test
 ```
 {{/if}}
 {{/if}}
+
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.

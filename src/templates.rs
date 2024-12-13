@@ -13,6 +13,7 @@ pub struct ProjectTemplateData {
     pub version: String,
     pub license: Option<String>,
     pub enable_tests: bool,
+    pub package_manager: String,
 }
 
 pub fn create_template_registry() -> Handlebars<'static> {
@@ -39,6 +40,11 @@ pub fn create_template_registry() -> Handlebars<'static> {
             "clang-format",
             include_str!("../templates/clang-format.hbs"),
         ),
+        (
+            "conanfile.txt",
+            include_str!("../templates/conanfile.txt.hbs"),
+        ),
+        ("vcpkg.json", include_str!("../templates/vcpkg.json.hbs")),
     ];
 
     for (name, content) in templates {

@@ -16,6 +16,7 @@ pub struct ProjectConfig {
     pub use_git: bool,
     pub path: PathBuf,
     pub enable_tests: bool,
+    pub package_manager: PackageManager,
 }
 
 #[derive(Debug)]
@@ -39,6 +40,13 @@ pub enum CppStandard {
     Cpp23,
 }
 
+#[derive(Debug)]
+pub enum PackageManager {
+    Conan,
+    Vcpkg,
+    None,
+}
+
 impl std::fmt::Display for BuildSystem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
@@ -56,6 +64,16 @@ impl std::fmt::Display for CppStandard {
             CppStandard::Cpp17 => write!(f, "17"),
             CppStandard::Cpp20 => write!(f, "20"),
             CppStandard::Cpp23 => write!(f, "23"),
+        }
+    }
+}
+
+impl std::fmt::Display for PackageManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            PackageManager::Conan => write!(f, "Conan"),
+            PackageManager::Vcpkg => write!(f, "Vcpkg"),
+            PackageManager::None => write!(f, "None"),
         }
     }
 }
@@ -181,12 +199,26 @@ impl ProjectConfig {
             _ => unreachable!(),
         };
 
-        // Git initialization
-        let use_git = Confirm::new("Do you want to initialize git repository?")
+        let package_manager = Select::new(
+            "Which package manager would you like to use?",
+            vec!["None", "Conan", "Vcpkg"],
+        )
+        .with_help_message("Package managers help manage external dependencies")
+        .prompt()?;
+
+        let package_manager = match package_manager {
+            "None" => PackageManager::None,
+            "Conan" => PackageManager::Conan,
+            "Vcpkg" => PackageManager::Vcpkg,
+            _ => unreachable!(),
+        };
+
+        let enable_tests = Confirm::new("Do you want to include unit tests?")
             .with_default(true)
             .prompt()?;
 
-        let enable_tests = Confirm::new("Do you want to include unit tests?")
+        // Git initialization
+        let use_git = Confirm::new("Do you want to initialize git repository?")
             .with_default(true)
             .prompt()?;
 
@@ -198,6 +230,7 @@ impl ProjectConfig {
             use_git,
             path: project_path,
             enable_tests,
+            package_manager,
         })
     }
 
@@ -284,11 +317,34 @@ impl ProjectConfig {
         Ok(())
     }
 
+    pub fn generate_package_manager_files(&self) -> Result<()> {
+        match self.package_manager {
+            PackageManager::Conan => {
+                self.render_template("conanfile.txt", &self.path.join("conanfile.txt"))?;
+            }
+            PackageManager::Vcpkg => {
+                self.render_template("vcpkg.json", &self.path.join("vcpkg.json"))?;
+            }
+            PackageManager::None => {}
+        }
+        Ok(())
+    }
+
     pub fn check_prerequisites(&self) -> Result<()> {
         // Check if required tools are installed
-        let tools = match self.build_system {
+        let mut tools = match self.build_system {
             BuildSystem::CMake => vec!["cmake", "g++"],
             BuildSystem::Make => vec!["make", "g++"],
+        };
+
+        match self.package_manager {
+            PackageManager::Conan => {
+                tools.push("conan");
+            }
+            PackageManager::Vcpkg => {
+                tools.push("vcpkg");
+            }
+            PackageManager::None => {}
         };
 
         for tool in tools {
@@ -367,6 +423,7 @@ impl ProjectConfig {
             version: "0.1.0".to_string(),
             license: Some("MIT".to_string()),
             enable_tests: self.enable_tests,
+            package_manager: self.package_manager.to_string(),
         }
     }
 
