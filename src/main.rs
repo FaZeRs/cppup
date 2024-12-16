@@ -3,7 +3,9 @@ mod project;
 mod templates;
 
 use crate::cli::Cli;
-use crate::project::{BuildSystem, CppStandard, PackageManager, ProjectConfig, ProjectType};
+use crate::project::{
+    BuildSystem, CppStandard, License, PackageManager, ProjectConfig, ProjectType,
+};
 use anyhow::{Context, Result};
 use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
@@ -16,10 +18,11 @@ fn generate_project(config: &ProjectConfig) -> Result<()> {
     println!("C++ Standard: {:?}", config.cpp_standard);
     println!("Enable Tests: {}", config.enable_tests);
     println!("Package Manager: {:?}", config.package_manager);
+    println!("License: {:?}", config.license);
     println!("Initialize Git: {}", config.use_git);
     println!("Project Path: {}", config.path.display());
 
-    let pb = ProgressBar::new(8);
+    let pb = ProgressBar::new(9);
     pb.set_style(
         ProgressStyle::default_bar()
             .template("{spinner:.green} [{bar:40.cyan/blue}] {pos}/{len} {msg}")
@@ -58,6 +61,10 @@ fn generate_project(config: &ProjectConfig) -> Result<()> {
     // Generate README
     pb.set_message("Generating README...");
     config.generate_readme()?;
+    pb.inc(1);
+
+    pb.set_message("Generating license...");
+    config.generate_license()?;
     pb.inc(1);
 
     // Initialize git if requested
@@ -115,6 +122,14 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
         _ => PackageManager::None,
     };
 
+    let license = match cli.license.as_str() {
+        "MIT" => License::MIT,
+        "Apache-2.0" => License::Apache,
+        "GPL-3.0" => License::GPL,
+        "BSD-3-Clause" => License::BSD,
+        _ => unreachable!(),
+    };
+
     Ok(ProjectConfig {
         name,
         project_type,
@@ -124,6 +139,7 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
         path,
         enable_tests: cli.enable_tests,
         package_manager,
+        license,
     })
 }
 

@@ -1,6 +1,7 @@
 use crate::cli::Cli;
 use crate::templates::{create_template_registry, ProjectTemplateData};
 use anyhow::{Context, Result};
+use chrono::prelude::*;
 use inquire::validator::Validation;
 use inquire::{Confirm, Select, Text};
 use std::fs;
@@ -17,6 +18,7 @@ pub struct ProjectConfig {
     pub path: PathBuf,
     pub enable_tests: bool,
     pub package_manager: PackageManager,
+    pub license: License,
 }
 
 #[derive(Debug)]
@@ -47,6 +49,14 @@ pub enum PackageManager {
     None,
 }
 
+#[derive(Debug)]
+pub enum License {
+    MIT,
+    Apache,
+    GPL,
+    BSD,
+}
+
 impl std::fmt::Display for BuildSystem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
@@ -74,6 +84,17 @@ impl std::fmt::Display for PackageManager {
             PackageManager::Conan => write!(f, "Conan"),
             PackageManager::Vcpkg => write!(f, "Vcpkg"),
             PackageManager::None => write!(f, "None"),
+        }
+    }
+}
+
+impl std::fmt::Display for License {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            License::MIT => write!(f, "MIT"),
+            License::Apache => write!(f, "Apache-2.0"),
+            License::GPL => write!(f, "GPL-3.0"),
+            License::BSD => write!(f, "BSD-3-Clause"),
         }
     }
 }
@@ -222,6 +243,20 @@ impl ProjectConfig {
             .with_default(true)
             .prompt()?;
 
+        let license = Select::new(
+            "Which license do you want to use?",
+            vec!["MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause"],
+        )
+        .prompt()?;
+
+        let license = match license {
+            "MIT" => License::MIT,
+            "Apache-2.0" => License::Apache,
+            "GPL-3.0" => License::GPL,
+            "BSD-3-Clause" => License::BSD,
+            _ => unreachable!(),
+        };
+
         Ok(ProjectConfig {
             name,
             project_type,
@@ -231,6 +266,7 @@ impl ProjectConfig {
             path: project_path,
             enable_tests,
             package_manager,
+            license,
         })
     }
 
@@ -411,6 +447,12 @@ impl ProjectConfig {
         Ok(())
     }
 
+    pub fn generate_license(&self) -> Result<()> {
+        self.render_template(&self.license.to_string(), &self.path.join("LICENSE"))?;
+
+        Ok(())
+    }
+
     fn create_template_data(&self) -> ProjectTemplateData {
         ProjectTemplateData {
             name: self.name.clone(),
@@ -421,7 +463,7 @@ impl ProjectConfig {
             description: Some("A C++ project generated with cppup".to_string()),
             author: std::env::var("USER").ok(),
             version: "0.1.0".to_string(),
-            license: Some("MIT".to_string()),
+            year: Local::now().year().to_string(),
             enable_tests: self.enable_tests,
             package_manager: self.package_manager.to_string(),
         }

@@ -11,7 +11,7 @@ pub struct ProjectTemplateData {
     pub description: Option<String>,
     pub author: Option<String>,
     pub version: String,
-    pub license: Option<String>,
+    pub year: String,
     pub enable_tests: bool,
     pub package_manager: String,
 }
@@ -45,6 +45,16 @@ pub fn create_template_registry() -> Handlebars<'static> {
             include_str!("../templates/conanfile.txt.hbs"),
         ),
         ("vcpkg.json", include_str!("../templates/vcpkg.json.hbs")),
+        ("MIT", include_str!("../templates/licenses/MIT.hbs")),
+        ("GPL-3.0", include_str!("../templates/licenses/GPL-3.0.hbs")),
+        (
+            "BSD-3-Clause",
+            include_str!("../templates/licenses/BSD-3-Clause.hbs"),
+        ),
+        (
+            "Apache-2.0",
+            include_str!("../templates/licenses/Apache-2.0.hbs"),
+        ),
     ];
 
     for (name, content) in templates {

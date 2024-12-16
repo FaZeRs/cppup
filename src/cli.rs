@@ -37,4 +37,10 @@ pub struct Cli {
 
     #[arg(long, value_parser = ["conan", "vcpkg", "none"], default_value = "none")]
     pub package_manager: String,
+
+    #[arg(long, value_parser = ["MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause"], default_value = "MIT")]
+    pub license: String,
+
+    #[arg(long)]
+    pub author: Option<String>,
 }
