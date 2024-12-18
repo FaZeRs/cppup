@@ -8,6 +8,10 @@ pub struct Cli {
     #[arg(short, long)]
     pub name: Option<String>,
 
+    /// Project description
+    #[arg(short, long)]
+    pub description: Option<String>,
+
     /// Project type (executable or library)
     #[arg(short = 't', long, value_parser = ["executable", "library"])]
     pub project_type: Option<String>,

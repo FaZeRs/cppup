@@ -1,5 +1,8 @@
+use anyhow::{Context, Result};
 use handlebars::Handlebars;
 use serde::Serialize;
+use std::fs;
+use std::path::Path;
 
 #[derive(Serialize)]
 pub struct ProjectTemplateData {
@@ -8,15 +11,43 @@ pub struct ProjectTemplateData {
     pub is_library: bool,
     pub namespace: String,
     pub build_system: String,
-    pub description: Option<String>,
-    pub author: Option<String>,
+    pub description: String,
+    pub author: String,
     pub version: String,
     pub year: String,
     pub enable_tests: bool,
     pub package_manager: String,
 }
 
-pub fn create_template_registry() -> Handlebars<'static> {
+pub struct TemplateRenderer {
+    registry: Handlebars<'static>,
+}
+
+impl TemplateRenderer {
+    pub fn new() -> Self {
+        Self {
+            registry: create_template_registry(),
+        }
+    }
+    pub fn render<T: Serialize>(
+        &self,
+        template_name: &str,
+        data: &T,
+        output_path: &Path,
+    ) -> Result<()> {
+        let rendered = self
+            .registry
+            .render(template_name, &data)
+            .with_context(|| format!("Failed to render template {}", template_name))?;
+
+        fs::write(output_path, rendered)
+            .with_context(|| format!("Failed to write file {}", output_path.display()))?;
+
+        Ok(())
+    }
+}
+
+fn create_template_registry() -> Handlebars<'static> {
     let mut handlebars = Handlebars::new();
 
     // Register all templates with proper error handling
