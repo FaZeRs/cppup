@@ -86,7 +86,7 @@ impl ProjectBuilder {
         self.generate_source_files()?;
         self.generate_test_files()?;
         self.generate_readme()?;
-        self.generate_clang_format()?;
+        self.generate_quality_files()?;
         self.generate_license()?;
         Ok(())
     }
@@ -204,16 +204,6 @@ impl ProjectBuilder {
         Ok(())
     }
 
-    fn generate_clang_format(&self) -> Result<()> {
-        self.template_renderer.render(
-            "clang-format",
-            &self.template_data,
-            &self.config.path.join(".clang-format"),
-        )?;
-
-        Ok(())
-    }
-
     fn generate_license(&self) -> Result<()> {
         self.template_renderer.render(
             &self.config.license.to_string(),
@@ -221,6 +211,31 @@ impl ProjectBuilder {
             &self.config.path.join("LICENSE"),
         )?;
 
+        Ok(())
+    }
+
+    fn generate_quality_files(&self) -> Result<()> {
+        if self.config.quality_config.enable_clang_format {
+            self.template_renderer.render(
+                "clang-format",
+                &self.template_data,
+                &self.config.path.join(".clang-format"),
+            )?;
+        }
+        if self.config.quality_config.enable_clang_tidy {
+            self.template_renderer.render(
+                "clang-tidy",
+                &self.template_data,
+                &self.config.path.join(".clang-tidy"),
+            )?;
+        }
+        if self.config.quality_config.enable_cppcheck {
+            self.template_renderer.render(
+                "cppcheck-suppressions.xml",
+                &self.template_data,
+                &self.config.path.join("cppcheck-suppressions.xml"),
+            )?;
+        }
         Ok(())
     }
 

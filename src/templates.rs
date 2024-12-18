@@ -68,10 +68,6 @@ fn create_template_registry() -> Handlebars<'static> {
         ("gitignore", include_str!("../templates/gitignore.hbs")),
         ("README.md", include_str!("../templates/README.md.hbs")),
         (
-            "clang-format",
-            include_str!("../templates/clang-format.hbs"),
-        ),
-        (
             "conanfile.txt",
             include_str!("../templates/conanfile.txt.hbs"),
         ),
@@ -85,6 +81,15 @@ fn create_template_registry() -> Handlebars<'static> {
         (
             "Apache-2.0",
             include_str!("../templates/licenses/Apache-2.0.hbs"),
+        ),
+        (
+            "clang-format",
+            include_str!("../templates/clang-format.hbs"),
+        ),
+        ("clang-tidy", include_str!("../templates/clang-tidy.hbs")),
+        (
+            "cppcheck-suppressions.xml",
+            include_str!("../templates/cppcheck-suppressions.xml.hbs"),
         ),
     ];
 

@@ -57,3 +57,10 @@ impl std::fmt::Display for PackageManager {
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct QualityConfig {
+    pub enable_clang_tidy: bool,
+    pub enable_cppcheck: bool,
+    pub enable_clang_format: bool,
+}

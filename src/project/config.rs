@@ -1,4 +1,4 @@
-use super::{BuildSystem, License, PackageManager};
+use super::{BuildSystem, License, PackageManager, QualityConfig};
 use crate::cli::Cli;
 use anyhow::{Context, Result};
 use inquire::validator::Validation;
@@ -23,6 +23,7 @@ pub struct ProjectConfig {
     pub path: PathBuf,
     pub author: String,
     pub version: String,
+    pub quality_config: QualityConfig,
 }
 
 #[derive(Debug, Clone)]
@@ -119,6 +120,12 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
         _ => unreachable!(),
     };
 
+    let quality_config = QualityConfig {
+        enable_clang_tidy: cli.enable_clang_tidy,
+        enable_cppcheck: cli.enable_cppcheck,
+        enable_clang_format: cli.enable_clang_format,
+    };
+
     Ok(ProjectConfig {
         name,
         project_type,
@@ -132,6 +139,7 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
         description,
         author,
         version: DEFAULT_VERSION.to_string(),
+        quality_config,
     })
 }
 
@@ -316,6 +324,35 @@ impl ProjectConfig {
             _ => unreachable!(),
         };
 
+        let quality_config = if Confirm::new("Do you want to set up code quality tools?")
+            .with_default(true)
+            .prompt()?
+        {
+            let enable_clang_format = Confirm::new("Enable clang-format for code formatting?")
+                .with_default(true)
+                .prompt()?;
+
+            let enable_clang_tidy = Confirm::new("Enable clang-tidy for static analysis?")
+                .with_default(true)
+                .prompt()?;
+
+            let enable_cppcheck = Confirm::new("Enable cppcheck for additional static analysis?")
+                .with_default(true)
+                .prompt()?;
+
+            QualityConfig {
+                enable_clang_format,
+                enable_clang_tidy,
+                enable_cppcheck,
+            }
+        } else {
+            QualityConfig {
+                enable_clang_format: false,
+                enable_clang_tidy: false,
+                enable_cppcheck: false,
+            }
+        };
+
         Ok(ProjectConfig {
             name,
             project_type,
@@ -329,6 +366,7 @@ impl ProjectConfig {
             author,
             description,
             version: DEFAULT_VERSION.to_string(),
+            quality_config,
         })
     }
 }
