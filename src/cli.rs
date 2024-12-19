@@ -48,12 +48,6 @@ pub struct Cli {
     #[arg(long)]
     pub author: Option<String>,
 
-    #[arg(long, default_value_t = false)]
-    pub enable_clang_tidy: bool,
-
-    #[arg(long, default_value_t = false)]
-    pub enable_cppcheck: bool,
-
-    #[arg(long, default_value_t = false)]
-    pub enable_clang_format: bool,
+    #[arg(long, value_delimiter = ',', value_parser = ["clang-tidy", "cppcheck", "clang-format"])]
+    pub quality_tools: Vec<String>,
 }

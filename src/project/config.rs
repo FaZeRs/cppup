@@ -2,7 +2,7 @@ use super::{BuildSystem, License, PackageManager, QualityConfig};
 use crate::cli::Cli;
 use anyhow::{Context, Result};
 use inquire::validator::Validation;
-use inquire::{Confirm, Select, Text};
+use inquire::{Confirm, MultiSelect, Select, Text};
 use std::fs;
 use std::path::PathBuf;
 
@@ -120,11 +120,12 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
         _ => unreachable!(),
     };
 
-    let quality_config = QualityConfig {
-        enable_clang_tidy: cli.enable_clang_tidy,
-        enable_cppcheck: cli.enable_cppcheck,
-        enable_clang_format: cli.enable_clang_format,
-    };
+    let quality_config = QualityConfig::new(
+        &cli.quality_tools
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<&str>>(),
+    );
 
     Ok(ProjectConfig {
         name,
@@ -328,29 +329,30 @@ impl ProjectConfig {
             .with_default(true)
             .prompt()?
         {
-            let enable_clang_format = Confirm::new("Enable clang-format for code formatting?")
-                .with_default(true)
-                .prompt()?;
+            let tools = MultiSelect::new(
+                "Which code quality tools would you like to use?",
+                vec![
+                    "clang-format (Code formatting)",
+                    "clang-tidy (Static analysis)",
+                    "cppcheck (Additional static analysis)",
+                ],
+            )
+            .with_help_message("Use space to select/deselect, enter to confirm")
+            .with_default(&[0])
+            .prompt()?;
 
-            let enable_clang_tidy = Confirm::new("Enable clang-tidy for static analysis?")
-                .with_default(true)
-                .prompt()?;
-
-            let enable_cppcheck = Confirm::new("Enable cppcheck for additional static analysis?")
-                .with_default(true)
-                .prompt()?;
-
-            QualityConfig {
-                enable_clang_format,
-                enable_clang_tidy,
-                enable_cppcheck,
-            }
+            let selected_tools: Vec<&str> = tools
+                .iter()
+                .map(|t| match *t {
+                    "clang-format (Code formatting)" => "clang-format",
+                    "clang-tidy (Static analysis)" => "clang-tidy",
+                    "cppcheck (Additional static analysis)" => "cppcheck",
+                    _ => unreachable!(),
+                })
+                .collect();
+            QualityConfig::new(&selected_tools)
         } else {
-            QualityConfig {
-                enable_clang_format: false,
-                enable_clang_tidy: false,
-                enable_cppcheck: false,
-            }
+            QualityConfig::new(&[])
         };
 
         Ok(ProjectConfig {

@@ -64,3 +64,13 @@ pub struct QualityConfig {
     pub enable_cppcheck: bool,
     pub enable_clang_format: bool,
 }
+
+impl QualityConfig {
+    pub fn new(tools: &[&str]) -> Self {
+        Self {
+            enable_clang_tidy: tools.contains(&"clang-tidy"),
+            enable_cppcheck: tools.contains(&"cppcheck"),
+            enable_clang_format: tools.contains(&"clang-format"),
+        }
+    }
+}

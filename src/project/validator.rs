@@ -34,16 +34,15 @@ impl ProjectValidator {
             PackageManager::None => {}
         };
 
-        if let quality_config = &self.config.quality_config {
-            if quality_config.enable_clang_format {
-                tools.push("clang-format");
-            }
-            if quality_config.enable_clang_tidy {
-                tools.push("clang-tidy");
-            }
-            if quality_config.enable_cppcheck {
-                tools.push("cppcheck");
-            }
+        let quality_config = &self.config.quality_config;
+        if quality_config.enable_clang_format {
+            tools.push("clang-format");
+        }
+        if quality_config.enable_clang_tidy {
+            tools.push("clang-tidy");
+        }
+        if quality_config.enable_cppcheck {
+            tools.push("cppcheck");
         }
 
         for tool in tools {
