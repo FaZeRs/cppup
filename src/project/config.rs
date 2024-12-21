@@ -146,8 +146,10 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
 
 impl ProjectConfig {
     pub fn new(defaults: Option<&Cli>) -> Result<Self> {
-        if defaults.is_some() && defaults.unwrap().non_interactive {
-            return create_config_from_cli(&defaults.unwrap());
+        if let Some(default) = defaults {
+            if default.non_interactive {
+                return create_config_from_cli(default);
+            }
         }
 
         let name = Text::new("What is your project name?")
