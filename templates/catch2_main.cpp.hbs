@@ -1,0 +1,26 @@
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch.hpp>
+{{#if is_library}}
+#include "{{name}}.hpp"
+
+TEST_CASE("Calculator operations", "[calculator]") {
+    using namespace {{namespace}};
+    
+    SECTION("Addition") {
+        REQUIRE(Calculator::add(2, 2) == 4);
+        REQUIRE(Calculator::add(-1, 1) == 0);
+    }
+    
+    SECTION("Subtraction") {
+        REQUIRE(Calculator::subtract(5, 3) == 2);
+        REQUIRE(Calculator::subtract(1, 1) == 0);
+    }
+}
+{{else}}
+TEST_CASE("Basic operations", "[basic]") {
+    SECTION("Simple arithmetic") {
+        REQUIRE(1 + 1 == 2);
+        REQUIRE(2 * 3 == 6);
+    }
+}
+{{/if}}

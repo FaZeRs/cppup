@@ -16,6 +16,7 @@ pub struct ProjectTemplateData {
     pub version: String,
     pub year: String,
     pub enable_tests: bool,
+    pub test_framework: String,
     pub package_manager: String,
 }
 
@@ -61,10 +62,6 @@ fn create_template_registry() -> Handlebars<'static> {
         ("header.hpp", include_str!("../templates/header.hpp.hbs")),
         ("library.cpp", include_str!("../templates/library.cpp.hbs")),
         ("example.cpp", include_str!("../templates/example.cpp.hbs")),
-        (
-            "main_test.cpp",
-            include_str!("../templates/main_test.cpp.hbs"),
-        ),
         ("gitignore", include_str!("../templates/gitignore.hbs")),
         ("README.md", include_str!("../templates/README.md.hbs")),
         (
@@ -90,6 +87,23 @@ fn create_template_registry() -> Handlebars<'static> {
         (
             "cppcheck-suppressions.xml",
             include_str!("../templates/cppcheck-suppressions.xml.hbs"),
+        ),
+        ("tests.cmake", include_str!("../templates/tests.cmake.hbs")),
+        (
+            "boost_test_main.cpp",
+            include_str!("../templates/boost_test_main.cpp.hbs"),
+        ),
+        (
+            "catch2_main.cpp",
+            include_str!("../templates/catch2_main.cpp.hbs"),
+        ),
+        (
+            "gtest_main.cpp",
+            include_str!("../templates/gtest_main.cpp.hbs"),
+        ),
+        (
+            "doctest_main.cpp",
+            include_str!("../templates/doctest_main.cpp.hbs"),
         ),
     ];
 

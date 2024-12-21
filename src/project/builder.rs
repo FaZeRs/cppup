@@ -1,5 +1,5 @@
 use super::config::{ProjectConfig, ProjectType};
-use super::{BuildSystem, PackageManager};
+use super::{BuildSystem, PackageManager, TestFramework};
 use crate::templates::{ProjectTemplateData, TemplateRenderer};
 use anyhow::{Context, Result};
 use chrono::prelude::*;
@@ -23,7 +23,8 @@ fn create_template_data(config: &ProjectConfig) -> ProjectTemplateData {
         author: config.author.clone(),
         version: config.version.to_string(),
         year: Local::now().year().to_string(),
-        enable_tests: config.enable_tests,
+        enable_tests: config.test_framework != TestFramework::None,
+        test_framework: config.test_framework.to_string(),
         package_manager: config.package_manager.to_string(),
     }
 }
@@ -66,7 +67,7 @@ impl ProjectBuilder {
             },
         ];
 
-        if self.config.enable_tests {
+        if self.config.test_framework != TestFramework::None {
             dirs.push("tests");
         }
 
@@ -184,12 +185,44 @@ impl ProjectBuilder {
     }
 
     fn generate_test_files(&self) -> Result<()> {
-        if self.config.enable_tests {
+        if self.config.test_framework != TestFramework::None {
             self.template_renderer.render(
-                "main_test.cpp",
+                "tests.cmake",
                 &self.template_data,
-                &self.config.path.join("tests/main_test.cpp"),
+                &self.config.path.join("tests/CMakeLists.txt"),
             )?;
+
+            match self.config.test_framework {
+                TestFramework::Doctest => {
+                    self.template_renderer.render(
+                        "doctest_main.cpp",
+                        &self.template_data,
+                        &self.config.path.join("tests/main_test.cpp"),
+                    )?;
+                }
+                TestFramework::GTest => {
+                    self.template_renderer.render(
+                        "gtest_main.cpp",
+                        &self.template_data,
+                        &self.config.path.join("tests/main_test.cpp"),
+                    )?;
+                }
+                TestFramework::BoostTest => {
+                    self.template_renderer.render(
+                        "boost_test_main.cpp",
+                        &self.template_data,
+                        &self.config.path.join("tests/main_test.cpp"),
+                    )?;
+                }
+                TestFramework::Catch2 => {
+                    self.template_renderer.render(
+                        "catch2_main.cpp",
+                        &self.template_data,
+                        &self.config.path.join("tests/main_test.cpp"),
+                    )?;
+                }
+                TestFramework::None => {}
+            }
         }
         Ok(())
     }

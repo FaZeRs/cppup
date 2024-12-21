@@ -1,0 +1,24 @@
+#include <gtest/gtest.h>
+{{#if is_library}}
+#include "{{name}}.hpp"
+
+TEST({{namespace}}Test, Calculator) {
+    using namespace {{namespace}};
+    
+    EXPECT_EQ(Calculator::add(2, 2), 4);
+    EXPECT_EQ(Calculator::subtract(5, 3), 2);
+    EXPECT_EQ(Calculator::multiply(2, 3), 6);
+    EXPECT_DOUBLE_EQ(Calculator::divide(6.0, 2.0), 3.0);
+}
+{{else}}
+TEST(BasicTest, SimpleArithmetic) {
+    EXPECT_EQ(1 + 1, 2);
+    EXPECT_EQ(2 * 3, 6);
+    EXPECT_EQ(10 - 5, 5);
+}
+{{/if}}
+
+int main(int argc, char** argv) {
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}

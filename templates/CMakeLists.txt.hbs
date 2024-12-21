@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-{{#if (eq package_manager "Conan")}}
+{{#if (eq package_manager "conan")}}
 # Conan setup
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
     message(FATAL_ERROR "The file conan_toolchain.cmake doesn't exist. Please run 'conan install .' first")
@@ -8,7 +8,7 @@ endif()
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
 {{/if}}
 
-{{#if (eq package_manager "Vcpkg")}}
+{{#if (eq package_manager "vcpkg")}}
 # Vcpkg setup
 set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
     CACHE STRING "Vcpkg toolchain file")
@@ -42,11 +42,6 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     add_compile_options(-Os)
 endif()
 
-{{#if enable_tests}}
-# Enable testing
-enable_testing()
-{{/if}}
-
 {{#if is_library}}
 # Library
 add_library(${PROJECT_NAME} STATIC
@@ -63,13 +58,7 @@ add_executable(${PROJECT_NAME} src/main.cpp)
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 {{/if}}
 
-{{#if enable_tests}}
-# Tests
-add_executable(${PROJECT_NAME}_tests tests/main_test.cpp)
-{{#if is_library}}
-target_link_libraries(${PROJECT_NAME}_tests PRIVATE ${PROJECT_NAME})
-{{else}}
-target_include_directories(${PROJECT_NAME}_tests PRIVATE include)
-{{/if}}
-add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
+{{#if enable_tests }}
+enable_testing()
+add_subdirectory(tests)
 {{/if}}

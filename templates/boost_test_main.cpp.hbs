@@ -1,0 +1,42 @@
+#define BOOST_TEST_MODULE {{name}}_test
+#include <boost/test/included/unit_test.hpp>
+
+{{#if is_library}}
+#include "{{name}}.hpp"
+
+BOOST_AUTO_TEST_SUITE({{namespace}}Test)
+
+BOOST_AUTO_TEST_CASE(CalculatorTest)
+{
+    using namespace {{namespace}};
+    
+    // Test addition
+    BOOST_CHECK_EQUAL(Calculator::add(2, 2), 4);
+    BOOST_CHECK_EQUAL(Calculator::add(-1, 1), 0);
+    
+    // Test subtraction
+    BOOST_CHECK_EQUAL(Calculator::subtract(5, 3), 2);
+    BOOST_CHECK_EQUAL(Calculator::subtract(1, 1), 0);
+    
+    // Test multiplication
+    BOOST_CHECK_EQUAL(Calculator::multiply(2, 3), 6);
+    BOOST_CHECK_EQUAL(Calculator::multiply(-2, 3), -6);
+    
+    // Test division
+    BOOST_CHECK_CLOSE(Calculator::divide(6.0, 2.0), 3.0, 0.001);
+    BOOST_CHECK_CLOSE(Calculator::divide(5.0, 2.0), 2.5, 0.001);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+{{else}}
+BOOST_AUTO_TEST_SUITE(BasicTests)
+
+BOOST_AUTO_TEST_CASE(SimpleArithmetic)
+{
+    BOOST_CHECK_EQUAL(1 + 1, 2);
+    BOOST_CHECK_EQUAL(2 * 3, 6);
+    BOOST_CHECK_EQUAL(10 - 5, 5);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+{{/if}}

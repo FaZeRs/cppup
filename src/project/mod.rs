@@ -16,8 +16,8 @@ pub enum BuildSystem {
 impl std::fmt::Display for BuildSystem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            BuildSystem::CMake => write!(f, "CMake"),
-            BuildSystem::Make => write!(f, "Make"),
+            BuildSystem::CMake => write!(f, "cmake"),
+            BuildSystem::Make => write!(f, "make"),
         }
     }
 }
@@ -51,9 +51,9 @@ pub enum PackageManager {
 impl std::fmt::Display for PackageManager {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            PackageManager::Conan => write!(f, "Conan"),
-            PackageManager::Vcpkg => write!(f, "Vcpkg"),
-            PackageManager::None => write!(f, "None"),
+            PackageManager::Conan => write!(f, "conan"),
+            PackageManager::Vcpkg => write!(f, "vcpkg"),
+            PackageManager::None => write!(f, "none"),
         }
     }
 }
@@ -71,6 +71,27 @@ impl QualityConfig {
             enable_clang_tidy: tools.contains(&"clang-tidy"),
             enable_cppcheck: tools.contains(&"cppcheck"),
             enable_clang_format: tools.contains(&"clang-format"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TestFramework {
+    Doctest,
+    GTest,
+    Catch2,
+    BoostTest,
+    None,
+}
+
+impl std::fmt::Display for TestFramework {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            TestFramework::Doctest => write!(f, "doctest"),
+            TestFramework::GTest => write!(f, "gtest"),
+            TestFramework::Catch2 => write!(f, "catch2"),
+            TestFramework::BoostTest => write!(f, "boost"),
+            TestFramework::None => write!(f, "none"),
         }
     }
 }

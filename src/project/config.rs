@@ -1,4 +1,4 @@
-use super::{BuildSystem, License, PackageManager, QualityConfig};
+use super::{BuildSystem, License, PackageManager, QualityConfig, TestFramework};
 use crate::cli::Cli;
 use anyhow::{Context, Result};
 use inquire::validator::Validation;
@@ -16,7 +16,7 @@ pub struct ProjectConfig {
     pub project_type: ProjectType,
     pub build_system: BuildSystem,
     pub cpp_standard: CppStandard,
-    pub enable_tests: bool,
+    pub test_framework: TestFramework,
     pub package_manager: PackageManager,
     pub license: License,
     pub use_git: bool,
@@ -127,6 +127,15 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
             .collect::<Vec<&str>>(),
     );
 
+    let test_framework = match cli.test_framework.as_str() {
+        "doctest" => TestFramework::Doctest,
+        "gtest" => TestFramework::GTest,
+        "catch2" => TestFramework::Catch2,
+        "boosttest" => TestFramework::BoostTest,
+        "none" => TestFramework::None,
+        _ => unreachable!(),
+    };
+
     Ok(ProjectConfig {
         name,
         project_type,
@@ -134,7 +143,7 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
         cpp_standard,
         use_git: cli.git,
         path,
-        enable_tests: cli.enable_tests,
+        test_framework,
         package_manager,
         license,
         description,
@@ -304,9 +313,17 @@ impl ProjectConfig {
             _ => unreachable!(),
         };
 
-        let enable_tests = Confirm::new("Do you want to include unit tests?")
-            .with_default(true)
-            .prompt()?;
+        let test_framework = Select::new(
+            "Select testing framework:",
+            vec![
+                TestFramework::None,
+                TestFramework::Doctest,
+                TestFramework::GTest,
+                TestFramework::Catch2,
+                TestFramework::BoostTest,
+            ],
+        )
+        .prompt()?;
 
         // Git initialization
         let use_git = Confirm::new("Do you want to initialize git repository?")
@@ -364,13 +381,13 @@ impl ProjectConfig {
             cpp_standard,
             use_git,
             path: project_path,
-            enable_tests,
             package_manager,
             license,
             author,
             description,
             version: DEFAULT_VERSION.to_string(),
             quality_config,
+            test_framework,
         })
     }
 }
