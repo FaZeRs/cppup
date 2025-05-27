@@ -62,11 +62,72 @@ impl std::fmt::Display for CppStandard {
     }
 }
 
+// Validation functions
+fn validate_project_name(name: &str) -> Result<()> {
+    if name.is_empty() {
+        return Err(anyhow::anyhow!("Project name cannot be empty"));
+    }
+    if name.len() > 100 {
+        return Err(anyhow::anyhow!("Project name is too long"));
+    }
+    if name.starts_with(|c: char| c.is_numeric()) {
+        return Err(anyhow::anyhow!("Project name cannot start with a number"));
+    }
+    if !name
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err(anyhow::anyhow!(
+            "Project name can only contain alphanumeric characters, '-' and '_'"
+        ));
+    }
+    Ok(())
+}
+
+fn validate_project_path(path: &PathBuf) -> Result<()> {
+    if !path.exists() {
+        return Err(anyhow::anyhow!(
+            "Directory doesn't exist: {}",
+            path.display()
+        ));
+    }
+    if !path.is_dir() {
+        return Err(anyhow::anyhow!(
+            "Path is not a directory: {}",
+            path.display()
+        ));
+    }
+    // Check if we have write permissions
+    match fs::metadata(path) {
+        Ok(metadata) => {
+            if metadata.permissions().readonly() {
+                return Err(anyhow::anyhow!(
+                    "Directory is read-only: {}",
+                    path.display()
+                ));
+            }
+        }
+        Err(_) => {
+            return Err(anyhow::anyhow!(
+                "Cannot access directory: {}",
+                path.display()
+            ))
+        }
+    }
+    Ok(())
+}
+
 fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
     let name = cli
         .name
         .clone()
         .context("Project name is required in non-interactive mode")?;
+
+    // Validate project name
+    validate_project_name(&name)?;
+
+    // Validate project path
+    validate_project_path(&cli.path)?;
 
     let description = cli
         .description
@@ -105,6 +166,14 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
     };
 
     let path = cli.path.join(&name);
+
+    // Check if project directory already exists
+    if path.exists() {
+        return Err(anyhow::anyhow!(
+            "Project directory already exists: {}",
+            path.display()
+        ));
+    }
 
     let package_manager = match cli.package_manager.as_str() {
         "conan" => PackageManager::Conan,
@@ -168,29 +237,9 @@ impl ProjectConfig {
                     .unwrap_or("my-cpp-project"),
             )
             .with_help_message("The name of your project (will be used as directory name)")
-            .with_validator(|input: &str| {
-                // Improved validation
-                if input.is_empty() {
-                    return Ok(Validation::Invalid("Project name cannot be empty".into()));
-                }
-                if input.len() > 100 {
-                    return Ok(Validation::Invalid("Project name is too long".into()));
-                }
-                if input.starts_with(|c: char| c.is_numeric()) {
-                    return Ok(Validation::Invalid(
-                        "Project name cannot start with a number".into(),
-                    ));
-                }
-                if input
-                    .chars()
-                    .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
-                {
-                    Ok(Validation::Valid)
-                } else {
-                    Ok(Validation::Invalid(
-                        "Project name can only contain alphanumeric characters, '-' and '_'".into(),
-                    ))
-                }
+            .with_validator(|input: &str| match validate_project_name(input) {
+                Ok(()) => Ok(Validation::Valid),
+                Err(e) => Ok(Validation::Invalid(e.to_string().into())),
             })
             .prompt()?;
 
@@ -224,22 +273,10 @@ impl ProjectConfig {
             )
             .with_validator(|input: &str| {
                 let path = PathBuf::from(input);
-                if !path.exists() {
-                    return Ok(Validation::Invalid("Directory doesn't exist".into()));
+                match validate_project_path(&path) {
+                    Ok(()) => Ok(Validation::Valid),
+                    Err(e) => Ok(Validation::Invalid(e.to_string().into())),
                 }
-                if !path.is_dir() {
-                    return Ok(Validation::Invalid("Path is not a directory".into()));
-                }
-                // Check if we have write permissions
-                match fs::metadata(&path) {
-                    Ok(metadata) => {
-                        if metadata.permissions().readonly() {
-                            return Ok(Validation::Invalid("Directory is read-only".into()));
-                        }
-                    }
-                    Err(_) => return Ok(Validation::Invalid("Cannot access directory".into())),
-                }
-                Ok(Validation::Valid)
             })
             .prompt()?;
 

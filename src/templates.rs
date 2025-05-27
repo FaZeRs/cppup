@@ -46,6 +46,13 @@ impl TemplateRenderer {
 
         Ok(())
     }
+
+    #[allow(dead_code)]
+    pub fn render_to_string<T: Serialize>(&self, template_name: &str, data: &T) -> Result<String> {
+        self.registry
+            .render(template_name, &data)
+            .with_context(|| format!("Failed to render template {}", template_name))
+    }
 }
 
 fn create_template_registry() -> Handlebars<'static> {
@@ -114,4 +121,82 @@ fn create_template_registry() -> Handlebars<'static> {
     }
 
     handlebars
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn create_test_data() -> ProjectTemplateData {
+        ProjectTemplateData {
+            name: "test-project".to_string(),
+            cpp_standard: "17".to_string(),
+            is_library: false,
+            namespace: "test_project".to_string(),
+            build_system: "cmake".to_string(),
+            description: "A test project".to_string(),
+            author: "Test Author".to_string(),
+            version: "0.1.0".to_string(),
+            year: "2024".to_string(),
+            enable_tests: true,
+            test_framework: "doctest".to_string(),
+            package_manager: "none".to_string(),
+        }
+    }
+
+    #[test]
+    fn test_template_renderer_creation() {
+        let _renderer = TemplateRenderer::new();
+        // Should not panic
+    }
+
+    #[test]
+    fn test_render_main_cpp() {
+        let renderer = TemplateRenderer::new();
+        let data = create_test_data();
+
+        let result = renderer.render_to_string("main.cpp", &data);
+        assert!(result.is_ok());
+
+        let content = result.unwrap();
+        assert!(content.contains("#include"));
+    }
+
+    #[test]
+    fn test_render_cmake() {
+        let renderer = TemplateRenderer::new();
+        let data = create_test_data();
+
+        let result = renderer.render_to_string("CMakeLists.txt", &data);
+        assert!(result.is_ok());
+
+        let content = result.unwrap();
+        assert!(content.contains("cmake_minimum_required"));
+        assert!(content.contains("test-project"));
+    }
+
+    #[test]
+    fn test_render_to_file() {
+        let renderer = TemplateRenderer::new();
+        let data = create_test_data();
+        let temp_dir = TempDir::new().unwrap();
+        let output_path = temp_dir.path().join("test.cpp");
+
+        let result = renderer.render("main.cpp", &data, &output_path);
+        assert!(result.is_ok());
+        assert!(output_path.exists());
+
+        let content = fs::read_to_string(&output_path).unwrap();
+        assert!(content.contains("#include"));
+    }
+
+    #[test]
+    fn test_invalid_template() {
+        let renderer = TemplateRenderer::new();
+        let data = create_test_data();
+
+        let result = renderer.render_to_string("nonexistent", &data);
+        assert!(result.is_err());
+    }
 }
