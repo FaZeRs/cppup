@@ -17,11 +17,11 @@ pub struct Cli {
     pub project_type: Option<String>,
 
     /// Build system to use
-    #[arg(short, long, value_parser = ["cmake", "make"], default_value = "cmake")]
+    #[arg(short, long, value_parser = ["cmake", "make", "ninja", "bazel", "meson"], default_value = "cmake")]
     pub build_system: String,
 
     /// C++ standard to use
-    #[arg(short = 's', long, value_parser = ["11", "14", "17", "20", "23"], default_value = "17")]
+    #[arg(short = 's', long, value_parser = ["11", "14", "17", "20", "23", "26"], default_value = "17")]
     pub cpp_standard: String,
 
     /// Directory where to create the project
@@ -36,10 +36,14 @@ pub struct Cli {
     #[arg(short = 'i', long)]
     pub non_interactive: bool,
 
+    /// Enable C++20 modules support
+    #[arg(long)]
+    pub modules: bool,
+
     #[arg(long, value_parser = ["doctest", "gtest", "catch2", "boosttest", "none"], default_value = "none")]
     pub test_framework: String,
 
-    #[arg(long, value_parser = ["conan", "vcpkg", "none"], default_value = "none")]
+    #[arg(long, value_parser = ["conan", "vcpkg", "cpm", "hunter", "none"], default_value = "none")]
     pub package_manager: String,
 
     #[arg(long, value_parser = ["MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause"], default_value = "MIT")]
@@ -48,6 +52,26 @@ pub struct Cli {
     #[arg(long)]
     pub author: Option<String>,
 
-    #[arg(long, value_delimiter = ',', value_parser = ["clang-tidy", "cppcheck", "clang-format"])]
+    #[arg(long, value_delimiter = ',', value_parser = ["clang-tidy", "cppcheck", "clang-format", "cpplint", "include-what-you-use", "sanitizers"])]
     pub quality_tools: Vec<String>,
+
+    /// Load configuration from file
+    #[arg(short = 'c', long)]
+    pub config: Option<PathBuf>,
+
+    /// Save current configuration to file
+    #[arg(long)]
+    pub save_config: Option<PathBuf>,
+
+    /// Generate CI/CD configuration
+    #[arg(long, value_parser = ["github", "gitlab", "azure", "none"], default_value = "none")]
+    pub ci: String,
+
+    /// Enable Docker support
+    #[arg(long)]
+    pub docker: bool,
+
+    /// Generate IDE configuration files
+    #[arg(long, value_delimiter = ',', value_parser = ["vscode", "clion", "qtcreator", "vim"])]
+    pub ide: Vec<String>,
 }

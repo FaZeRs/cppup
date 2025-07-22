@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: \$\{{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        cpp_standard: [{{cpp_standard}}]
+        build_type: [Debug, Release]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up C++ environment
+      uses: aminya/setup-cpp@v1
+      with:
+        compiler: \$\{{ matrix.os == 'ubuntu-latest' && 'gcc' || 'clang' }}
+        cmake: true
+        ninja: true
+        {{#if (eq package_manager "conan")}}
+        conan: true
+        {{/if}}
+        {{#if (eq package_manager "vcpkg")}}
+        vcpkg: true
+        {{/if}}
+
+    {{#if (eq package_manager "conan")}}
+    - name: Install Conan dependencies
+      run: |
+        conan profile detect --force
+        conan install . --build=missing -s build_type=\$\{{ matrix.build_type }}
+    {{/if}}
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=\$\{{ matrix.build_type }} \
+              -DCMAKE_CXX_STANDARD={{cpp_standard}} \
+              {{#if enable_tests}}-DENABLE_TESTING=ON{{/if}}
+
+    - name: Build
+      run: cmake --build build --config \$\{{ matrix.build_type }}
+
+    {{#if enable_tests}}
+    - name: Test
+      working-directory: build
+      run: ctest --output-on-failure -C \$\{{ matrix.build_type }}
+    {{/if}}
+
+    {{#if (contains quality_tools "clang-tidy")}}
+    - name: Run clang-tidy
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        find src include -name "*.cpp" -o -name "*.hpp" | xargs clang-tidy
+    {{/if}}
+
+    {{#if (contains quality_tools "cppcheck")}}
+    - name: Run cppcheck
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        cppcheck --enable=all --error-exitcode=1 src/ include/
+    {{/if}} 

@@ -18,6 +18,11 @@ pub struct ProjectTemplateData {
     pub enable_tests: bool,
     pub test_framework: String,
     pub package_manager: String,
+    pub quality_tools: Vec<String>,
+    pub ci: String,
+    pub docker: bool,
+    pub ide: Vec<String>,
+    pub modules: bool,
 }
 
 pub struct TemplateRenderer {
@@ -57,6 +62,54 @@ impl TemplateRenderer {
 
 fn create_template_registry() -> Handlebars<'static> {
     let mut handlebars = Handlebars::new();
+
+    // Register custom helpers
+    handlebars.register_helper(
+        "contains",
+        Box::new(
+            |h: &handlebars::Helper,
+             _: &Handlebars,
+             _: &handlebars::Context,
+             _: &mut handlebars::RenderContext,
+             out: &mut dyn handlebars::Output|
+             -> handlebars::HelperResult {
+                let array = h.param(0).and_then(|v| v.value().as_array());
+                let search_value = h.param(1).and_then(|v| v.value().as_str());
+
+                if let (Some(array), Some(search_value)) = (array, search_value) {
+                    let contains = array
+                        .iter()
+                        .any(|item| item.as_str().map_or(false, |s| s == search_value));
+                    out.write(if contains { "true" } else { "false" })?;
+                } else {
+                    out.write("false")?;
+                }
+                Ok(())
+            },
+        ),
+    );
+
+    handlebars.register_helper(
+        "eq",
+        Box::new(
+            |h: &handlebars::Helper,
+             _: &Handlebars,
+             _: &handlebars::Context,
+             _: &mut handlebars::RenderContext,
+             out: &mut dyn handlebars::Output|
+             -> handlebars::HelperResult {
+                let param1 = h.param(0).and_then(|v| v.value().as_str());
+                let param2 = h.param(1).and_then(|v| v.value().as_str());
+
+                if let (Some(val1), Some(val2)) = (param1, param2) {
+                    out.write(if val1 == val2 { "true" } else { "false" })?;
+                } else {
+                    out.write("false")?;
+                }
+                Ok(())
+            },
+        ),
+    );
 
     // Register all templates with proper error handling
     let templates = vec![
@@ -112,6 +165,16 @@ fn create_template_registry() -> Handlebars<'static> {
             "doctest_main.cpp",
             include_str!("../templates/doctest_main.cpp.hbs"),
         ),
+        // TODO: Fix handlebars syntax issues in these templates
+        (
+            "github-actions.yml",
+            include_str!("../templates/github-actions.yml.hbs"),
+        ),
+        (
+            "vscode-settings.json",
+            include_str!("../templates/vscode-settings.json.hbs"),
+        ),
+        ("Dockerfile", include_str!("../templates/Dockerfile.hbs")),
     ];
 
     for (name, content) in templates {
@@ -142,6 +205,11 @@ mod tests {
             enable_tests: true,
             test_framework: "doctest".to_string(),
             package_manager: "none".to_string(),
+            quality_tools: Vec::new(),
+            ci: "GitHub Actions".to_string(),
+            docker: true,
+            ide: Vec::new(),
+            modules: false,
         }
     }
 

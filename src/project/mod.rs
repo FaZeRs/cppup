@@ -73,6 +73,20 @@ impl QualityConfig {
             enable_clang_format: tools.contains(&"clang-format"),
         }
     }
+
+    pub fn get_enabled_tools(&self) -> Vec<String> {
+        let mut tools = Vec::new();
+        if self.enable_clang_tidy {
+            tools.push("clang-tidy".to_string());
+        }
+        if self.enable_cppcheck {
+            tools.push("cppcheck".to_string());
+        }
+        if self.enable_clang_format {
+            tools.push("clang-format".to_string());
+        }
+        tools
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

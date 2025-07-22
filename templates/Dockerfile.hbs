@@ -1,0 +1,63 @@
+# Multi-stage build for {{name}}
+FROM ubuntu:22.04 as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    {{#if (eq build_system "ninja")}}ninja-build \{{/if}}
+    git \
+    {{#if (eq package_manager "conan")}}python3-pip \{{/if}}
+    {{#if (contains quality_tools "clang-tidy")}}clang-tidy \{{/if}}
+    {{#if (contains quality_tools "cppcheck")}}cppcheck \{{/if}}
+    && rm -rf /var/lib/apt/lists/*
+
+{{#if (eq package_manager "conan")}}
+# Install Conan
+RUN pip3 install conan
+{{/if}}
+
+# Set working directory
+WORKDIR /app
+
+# Copy source code
+COPY . .
+
+{{#if (eq package_manager "conan")}}
+# Install dependencies with Conan
+RUN conan profile detect --force && \
+    conan install . --build=missing -s build_type=Release
+{{/if}}
+
+# Build the project
+RUN cmake -B build -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_STANDARD={{cpp_standard}} && \
+    cmake --build build --config Release
+
+{{#if enable_tests}}
+# Run tests
+RUN cd build && ctest --output-on-failure
+{{/if}}
+
+# Production stage
+FROM ubuntu:22.04 as runtime
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -s /bin/bash appuser
+
+# Copy built application
+COPY --from=builder /app/build/{{name}} /usr/local/bin/{{name}}
+
+# Set ownership
+RUN chown appuser:appuser /usr/local/bin/{{name}}
+
+# Switch to non-root user
+USER appuser
+
+# Set entrypoint
+ENTRYPOINT ["{{name}}"]

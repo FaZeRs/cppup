@@ -26,6 +26,11 @@ fn create_template_data(config: &ProjectConfig) -> ProjectTemplateData {
         enable_tests: config.test_framework != TestFramework::None,
         test_framework: config.test_framework.to_string(),
         package_manager: config.package_manager.to_string(),
+        quality_tools: config.quality_config.get_enabled_tools(),
+        ci: "none".to_string(), // TODO: Add CI config to ProjectConfig
+        docker: false,          // TODO: Add Docker config to ProjectConfig
+        ide: Vec::new(),        // TODO: Add IDE config to ProjectConfig
+        modules: false,         // TODO: Add modules config to ProjectConfig
     }
 }
 

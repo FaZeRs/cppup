@@ -1,0 +1,26 @@
+{
+    "C_Cpp.default.cppStandard": "c++{{cpp_standard}}",
+    "C_Cpp.default.compilerPath": "/usr/bin/g++",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/include",
+        "${workspaceFolder}/src"
+    ],
+    "C_Cpp.default.defines": [],
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.generator": "{{#if (eq build_system "ninja")}}Ninja{{else}}Unix Makefiles{{/if}}",
+    {{#if (contains quality_tools "clang-format")}}
+    "C_Cpp.formatting": "clangFormat",
+    "editor.formatOnSave": true,
+    {{/if}}
+    {{#if (contains quality_tools "clang-tidy")}}
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    {{/if}}
+    "files.associations": {
+        "*.hpp": "cpp",
+        "*.cpp": "cpp"
+    },
+    "editor.rulers": [80, 120],
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+} 
