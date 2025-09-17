@@ -26,6 +26,8 @@ fn create_template_data(config: &ProjectConfig) -> ProjectTemplateData {
         enable_tests: config.test_framework != TestFramework::None,
         test_framework: config.test_framework.to_string(),
         package_manager: config.package_manager.to_string(),
+        quality_config: config.quality_config.to_string(),
+        code_formatter: config.code_formatter.to_string(),
     }
 }
 
@@ -60,6 +62,7 @@ impl ProjectBuilder {
         // Create standard directories
         let mut dirs = vec![
             "src",
+            "cmake",
             "include",
             match self.config.project_type {
                 ProjectType::Library => "examples",
@@ -81,13 +84,14 @@ impl ProjectBuilder {
 
     fn render_templates(&self) -> Result<()> {
         match self.config.build_system {
-            BuildSystem::CMake => self.generate_cmake_file()?,
+            BuildSystem::CMake => self.generate_cmake_files()?,
             BuildSystem::Make => self.generate_makefile()?,
         }
         self.generate_source_files()?;
         self.generate_test_files()?;
         self.generate_readme()?;
         self.generate_quality_files()?;
+        self.generate_code_formatter_files()?;
         self.generate_license()?;
         Ok(())
     }
@@ -130,13 +134,40 @@ impl ProjectBuilder {
         Ok(())
     }
 
-    fn generate_cmake_file(&self) -> Result<()> {
+    fn generate_cmake_files(&self) -> Result<()> {
         self.template_renderer.render(
             "CMakeLists.txt",
             &self.template_data,
             &self.config.path.join("CMakeLists.txt"),
         )?;
 
+        self.template_renderer.render(
+            "options.cmake",
+            &self.template_data,
+            &self.config.path.join("cmake/options.cmake"),
+        )?;
+        
+        self.template_renderer.render(
+            "compilation-flags.cmake",
+            &self.template_data,
+            &self.config.path.join("cmake/compilation-flags.cmake"),
+        )?;
+        
+        self.template_renderer.render(
+            "source.cmake",
+            &self.template_data,
+            &self.config.path.join("src/CMakeLists.txt"),
+        )?;
+
+        if self.config.project_type == ProjectType::Library {
+            self.template_renderer.render(
+                "example.cmake",
+                &self.template_data,
+                &self.config.path.join("examples/CMakeLists.txt"),
+            )?;
+        }
+        
+        
         Ok(())
     }
 
@@ -186,11 +217,13 @@ impl ProjectBuilder {
 
     fn generate_test_files(&self) -> Result<()> {
         if self.config.test_framework != TestFramework::None {
-            self.template_renderer.render(
-                "tests.cmake",
-                &self.template_data,
-                &self.config.path.join("tests/CMakeLists.txt"),
-            )?;
+            if self.config.build_system == BuildSystem::CMake {
+                self.template_renderer.render(
+                    "tests.cmake",
+                    &self.template_data,
+        &self.config.path.join("tests/CMakeLists.txt"),
+                )?;
+            }
 
             match self.config.test_framework {
                 TestFramework::Doctest => {
@@ -248,13 +281,6 @@ impl ProjectBuilder {
     }
 
     fn generate_quality_files(&self) -> Result<()> {
-        if self.config.quality_config.enable_clang_format {
-            self.template_renderer.render(
-                "clang-format",
-                &self.template_data,
-                &self.config.path.join(".clang-format"),
-            )?;
-        }
         if self.config.quality_config.enable_clang_tidy {
             self.template_renderer.render(
                 "clang-tidy",
@@ -267,6 +293,24 @@ impl ProjectBuilder {
                 "cppcheck-suppressions.xml",
                 &self.template_data,
                 &self.config.path.join("cppcheck-suppressions.xml"),
+            )?;
+        }
+        Ok(())
+    }
+
+    fn generate_code_formatter_files(&self) -> Result<()> {
+        if self.config.code_formatter.enable_clang_format {
+            self.template_renderer.render(
+                "clang-format",
+                &self.template_data,
+                &self.config.path.join(".clang-format"),
+            )?;
+        }
+        if self.config.code_formatter.enable_cmake_format {
+            self.template_renderer.render(
+                "cmake-format",
+                &self.template_data,
+                &self.config.path.join("cmake-format.yaml"),
             )?;
         }
         Ok(())

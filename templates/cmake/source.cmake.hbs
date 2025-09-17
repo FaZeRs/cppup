@@ -1,0 +1,11 @@
+{{#if is_library}}
+# Library
+add_library(${PROJECT_NAME} STATIC
+    lib.cpp
+)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
+{{else}}
+# Main executable
+add_executable(${PROJECT_NAME} main.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE include)
+{{/if}}

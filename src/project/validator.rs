@@ -35,16 +35,22 @@ impl ProjectValidator {
         };
 
         let quality_config = &self.config.quality_config;
-        if quality_config.enable_clang_format {
-            tools.push("clang-format");
-        }
         if quality_config.enable_clang_tidy {
             tools.push("clang-tidy");
         }
         if quality_config.enable_cppcheck {
             tools.push("cppcheck");
         }
-
+        if quality_config.enable_include_what_you_use {
+            tools.push("include-what-you-use");
+        }
+        let code_formatter = &self.config.code_formatter;
+        if code_formatter.enable_clang_format {
+            tools.push("clang-format");
+        }
+        if code_formatter.enable_cmake_format {
+            tools.push("cmake-format");
+        }
         for tool in tools {
             if !Self::is_tool_installed(tool) {
                 return Err(anyhow::anyhow!("{} is not installed", tool));

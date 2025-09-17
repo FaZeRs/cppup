@@ -48,6 +48,9 @@ pub struct Cli {
     #[arg(long)]
     pub author: Option<String>,
 
-    #[arg(long, value_delimiter = ',', value_parser = ["clang-tidy", "cppcheck", "clang-format"])]
+    #[arg(long, value_delimiter = ',', value_parser = ["clang-tidy", "cppcheck", "include-what-you-use"])]
     pub quality_tools: Vec<String>,
+
+    #[arg(long, value_parser = ["clang-format", "cmake-format", "none"], default_value = "none")]
+    pub code_formatter: Vec<String>,
 }

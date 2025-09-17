@@ -1,0 +1,24 @@
+[requires]
+# Add your dependencies here
+# Example:
+# boost/1.78.0
+# fmt/8.1.1
+{{#if (eq test_framework "doctest")}}
+doctest/2.4.12
+{{/if}}
+{{#if (eq test_framework "gtest")}}
+gtest/1.17.0
+{{/if}}
+{{#if (eq test_framework "catch2")}}
+catch2/3.10.0
+{{/if}}
+{{#if (eq test_framework "boost")}}
+boost/1.88.0
+{{/if}}
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[options]
+# Specify package options here

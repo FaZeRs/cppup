@@ -1,0 +1,79 @@
+cmake_minimum_required(VERSION 3.27)
+
+{{#if (eq package_manager "conan")}}
+# Conan setup
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+    message(FATAL_ERROR "The file conan_toolchain.cmake doesn't exist. Please run 'conan install .' first")
+endif()
+include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+{{/if}}
+
+{{#if (eq package_manager "vcpkg")}}
+# Vcpkg setup
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    CACHE STRING "Vcpkg toolchain file")
+{{/if}}
+
+project({{name}} LANGUAGES CXX)
+
+include(cmake/options.cmake)
+include(cmake/compilation-flags.cmake)
+
+include(FetchContent)
+FetchContent_Declare(
+  cmake-project
+  GIT_REPOSITORY https://github.com/FaZeRs/cmake.git
+  GIT_TAG main)
+FetchContent_MakeAvailable(cmake-project)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${cmake-project_SOURCE_DIR})
+
+add_library(project_warnings INTERFACE)
+add_library(project_options INTERFACE)
+
+include(compiler-warnings)
+set_project_warnings(project_warnings ${WARNINGS_AS_ERRORS} "" "" "")
+
+include(sanitizers)
+enable_sanitizers(
+  project_options
+  ${ENABLE_SANITIZER_ADDRESS}
+  ${ENABLE_SANITIZER_LEAK}
+  ${ENABLE_SANITIZER_UNDEFINED}
+  ${ENABLE_SANITIZER_THREAD}
+  ${ENABLE_SANITIZER_MEMORY})
+
+if(ENABLE_CACHE)
+  include(cache)
+  enable_cache()
+endif()
+
+{{#if (contains quality_config "clang-tidy" or contains quality_config "cppcheck" or contains quality_config "include-what-you-use")}}
+include(static-analyzers)
+{{/if}}
+
+{{#if (contains quality_config "clang-tidy")}}
+if(ENABLE_CLANG_TIDY)
+  enable_clang_tidy(project_options ${WARNINGS_AS_ERRORS})
+endif()
+{{/if}}
+
+{{#if (contains quality_config "cppcheck")}}
+if(ENABLE_CPPCHECK)
+  enable_cppcheck(project_options ${WARNINGS_AS_ERRORS} "")
+endif()
+{{/if}}
+
+{{#if (contains quality_config "include-what-you-use")}}
+if(ENABLE_INCLUDE_WHAT_YOU_USE)
+  enable_include_what_you_use(project_options)
+endif()
+{{/if}}
+
+target_compile_features(project_options INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
+
+add_subdirectory(src)
+
+{{#if enable_tests }}
+enable_testing()
+add_subdirectory(tests)
+{{/if}}

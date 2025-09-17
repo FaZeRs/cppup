@@ -7,7 +7,7 @@ pub use config::ProjectConfig;
 pub use validator::ProjectValidator;
 
 // Keep enums and other public types here
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BuildSystem {
     CMake,
     Make,
@@ -62,7 +62,7 @@ impl std::fmt::Display for PackageManager {
 pub struct QualityConfig {
     pub enable_clang_tidy: bool,
     pub enable_cppcheck: bool,
-    pub enable_clang_format: bool,
+    pub enable_include_what_you_use: bool,
 }
 
 impl QualityConfig {
@@ -70,8 +70,57 @@ impl QualityConfig {
         Self {
             enable_clang_tidy: tools.contains(&"clang-tidy"),
             enable_cppcheck: tools.contains(&"cppcheck"),
-            enable_clang_format: tools.contains(&"clang-format"),
+            enable_include_what_you_use: tools.contains(&"include-what-you-use"),
         }
+    }
+}
+
+impl std::fmt::Display for QualityConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut tools = Vec::new();
+        
+        if self.enable_clang_tidy {
+            tools.push("clang-tidy");
+        }
+        if self.enable_cppcheck {
+            tools.push("cppcheck");
+        }
+        if self.enable_include_what_you_use {
+            tools.push("include-what-you-use");
+        }
+        
+        write!(f, "{}", tools.join(", "))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CodeFormatter {
+    pub enable_clang_format: bool,
+    pub enable_cmake_format: bool,
+}
+
+
+impl CodeFormatter {
+    pub fn new(tools: &[&str]) -> Self {
+        Self {
+            enable_clang_format: tools.contains(&"clang-format"),
+            enable_cmake_format: tools.contains(&"cmake-format"),
+        }
+    }
+}
+
+impl std::fmt::Display for CodeFormatter {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut tools = Vec::new();
+        
+        if self.enable_clang_format {
+            tools.push("clang-format");
+        }
+        if self.enable_cmake_format {
+            tools.push("cmake-format");
+        }
+        
+        write!(f, "{}", tools.join(", "))
     }
 }
 

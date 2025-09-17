@@ -1,4 +1,4 @@
-use super::{BuildSystem, License, PackageManager, QualityConfig, TestFramework};
+use super::{BuildSystem, CodeFormatter, License, PackageManager, QualityConfig, TestFramework};
 use crate::cli::Cli;
 use anyhow::{Context, Result};
 use inquire::validator::Validation;
@@ -24,9 +24,10 @@ pub struct ProjectConfig {
     pub author: String,
     pub version: String,
     pub quality_config: QualityConfig,
+    pub code_formatter: CodeFormatter,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProjectType {
     Executable,
     Library,
@@ -196,6 +197,13 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
             .collect::<Vec<&str>>(),
     );
 
+    let code_formatter = CodeFormatter::new(
+        &cli.code_formatter
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<&str>>(),
+    );
+
     let test_framework = match cli.test_framework.as_str() {
         "doctest" => TestFramework::Doctest,
         "gtest" => TestFramework::GTest,
@@ -219,6 +227,7 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
         author,
         version: DEFAULT_VERSION.to_string(),
         quality_config,
+        code_formatter,
     })
 }
 
@@ -388,9 +397,38 @@ impl ProjectConfig {
             let tools = MultiSelect::new(
                 "Which code quality tools would you like to use?",
                 vec![
-                    "clang-format (Code formatting)",
                     "clang-tidy (Static analysis)",
-                    "cppcheck (Additional static analysis)",
+                    "cppcheck (Static analysis)",
+                    "include-what-you-use (Static analysis)",
+                ],
+            )
+            .with_help_message("Use space to select/deselect, enter to confirm")
+            .with_default(&[0])
+            .prompt()?;
+
+            let selected_tools: Vec<&str> = tools
+                .iter()
+                .map(|t| match *t {
+                    "clang-tidy (Static analysis)" => "clang-tidy",
+                    "cppcheck (Static analysis)" => "cppcheck",
+                    "include-what-you-use (Static analysis)" => "include-what-you-use",
+                    _ => unreachable!(),
+                })
+                .collect();
+            QualityConfig::new(&selected_tools)
+        } else {
+            QualityConfig::new(&[])
+        };
+
+        let code_formatter = if Confirm::new("Do you want to set up code formatter?")
+            .with_default(true)
+            .prompt()?
+        {
+            let tools = MultiSelect::new(
+                "Which code formatter would you like to use?",
+                vec![
+                    "clang-format (Code formatting)",
+                    "cmake-format (Code formatting)",
                 ],
             )
             .with_help_message("Use space to select/deselect, enter to confirm")
@@ -401,14 +439,13 @@ impl ProjectConfig {
                 .iter()
                 .map(|t| match *t {
                     "clang-format (Code formatting)" => "clang-format",
-                    "clang-tidy (Static analysis)" => "clang-tidy",
-                    "cppcheck (Additional static analysis)" => "cppcheck",
+                    "cmake-format (Code formatting)" => "cmake-format",
                     _ => unreachable!(),
                 })
                 .collect();
-            QualityConfig::new(&selected_tools)
+            CodeFormatter::new(&selected_tools)
         } else {
-            QualityConfig::new(&[])
+            CodeFormatter::new(&[])
         };
 
         Ok(ProjectConfig {
@@ -424,6 +461,7 @@ impl ProjectConfig {
             description,
             version: DEFAULT_VERSION.to_string(),
             quality_config,
+            code_formatter,
             test_framework,
         })
     }
