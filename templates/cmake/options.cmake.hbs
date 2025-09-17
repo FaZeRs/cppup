@@ -5,13 +5,13 @@ option(ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" OFF)
 option(ENABLE_SANITIZER_THREAD "Enable thread sanitizer" OFF)
 option(ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
 option(ENABLE_PROFILE "Enable profiling" OFF)
-{{#if (contains quality_tools "clang-tidy")}}
+{{#if (contains quality_config "clang-tidy")}}
 option(ENABLE_CLANG_TIDY "Enable clang-tidy analysis" ON)
 {{/if}}
-{{#if (contains quality_tools "cppcheck")}}
+{{#if (contains quality_config "cppcheck")}}
 option(ENABLE_CPPCHECK "Enable cppcheck analysis" ON)
 {{/if}}
-{{#if (contains quality_tools "include-what-you-use")}}
+{{#if (contains quality_config "include-what-you-use")}}
 option(ENABLE_INCLUDE_WHAT_YOU_USE "include-what-you-use messages" ON)
 {{/if}}
 option(ENABLE_CACHE "Enable ccache" OFF)
