@@ -6,6 +6,23 @@ use chrono::prelude::*;
 use std::fs;
 use std::process::Command;
 
+/// Builds and generates C++ project structure and files.
+///
+/// The ProjectBuilder handles the complete project generation process including:
+/// - Creating directory structure
+/// - Rendering templates for build files, source files, and configuration
+/// - Setting up package managers
+/// - Initializing git repository
+///
+/// # Examples
+///
+/// ```no_run
+/// use cppup::{ProjectBuilder, ProjectConfig};
+///
+/// // let config = ProjectConfig::new(None)?;
+/// // let builder = ProjectBuilder::new(config);
+/// // builder.build()?;
+/// ```
 pub struct ProjectBuilder {
     config: ProjectConfig,
     template_renderer: TemplateRenderer,
@@ -32,6 +49,20 @@ fn create_template_data(config: &ProjectConfig) -> ProjectTemplateData {
 }
 
 impl ProjectBuilder {
+    /// Creates a new ProjectBuilder with the given configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The project configuration specifying all options
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use cppup::{ProjectBuilder, ProjectConfig};
+    ///
+    /// // let config = ProjectConfig::new(None)?;
+    /// // let builder = ProjectBuilder::new(config);
+    /// ```
     pub fn new(config: ProjectConfig) -> Self {
         let template_data = create_template_data(&config);
         Self {
@@ -41,6 +72,35 @@ impl ProjectBuilder {
         }
     }
 
+    /// Builds the complete project structure.
+    ///
+    /// This method orchestrates the entire project generation process:
+    /// 1. Creates directory structure
+    /// 2. Renders all template files (build files, source code, configs)
+    /// 3. Sets up package manager configuration files
+    /// 4. Initializes git repository (if enabled)
+    /// 5. Prints success message with next steps
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` on success, or an error if any step fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Directory creation fails
+    /// - Template rendering fails
+    /// - Git initialization fails
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use cppup::{ProjectBuilder, ProjectConfig};
+    ///
+    /// // let config = ProjectConfig::new(None)?;
+    /// // let builder = ProjectBuilder::new(config);
+    /// // builder.build()?;
+    /// ```
     pub fn build(&self) -> Result<()> {
         self.create_directory_structure()?;
         self.render_templates()?;

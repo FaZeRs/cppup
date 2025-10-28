@@ -1,6 +1,24 @@
+//! Command-line interface definitions.
+//!
+//! This module defines the CLI structure and all command-line arguments
+//! for the cppup project generator.
+
 use clap::Parser;
 use std::path::PathBuf;
 
+/// Command-line interface for cppup.
+///
+/// This structure defines all available command-line arguments for
+/// configuring a C++ project generation in non-interactive mode.
+///
+/// # Examples
+///
+/// ```no_run
+/// use cppup::cli::Cli;
+/// use clap::Parser;
+///
+/// let cli = Cli::parse();
+/// ```
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {

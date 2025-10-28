@@ -3,15 +3,62 @@ use super::{BuildSystem, PackageManager};
 use anyhow::{Context, Result};
 use std::process::Command;
 
+/// Validates system prerequisites for project generation.
+///
+/// This validator checks that all required tools are installed and
+/// that the compiler version is compatible with the selected C++ standard.
+///
+/// # Examples
+///
+/// ```no_run
+/// use cppup::{ProjectValidator, ProjectConfig};
+///
+/// // let config = ProjectConfig::new(None)?;
+/// // let validator = ProjectValidator::new(config);
+/// // validator.check_prerequisites()?;
+/// ```
 pub struct ProjectValidator {
     config: ProjectConfig,
 }
 
 impl ProjectValidator {
+    /// Creates a new ProjectValidator with the given configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The project configuration to validate against
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use cppup::{ProjectValidator, ProjectConfig};
+    ///
+    /// // let config = ProjectConfig::new(None)?;
+    /// // let validator = ProjectValidator::new(config);
+    /// ```
     pub fn new(config: ProjectConfig) -> Self {
         Self { config }
     }
 
+    /// Checks that all required tools are installed and compatible.
+    ///
+    /// Validates:
+    /// - Build system tools (CMake/Make, g++)
+    /// - Package manager tools (Conan/Vcpkg if selected)
+    /// - Quality tools (clang-tidy, cppcheck, etc. if enabled)
+    /// - Code formatters (clang-format, cmake-format if enabled)
+    /// - Compiler version compatibility with C++ standard
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if all prerequisites are met, or an error describing
+    /// what is missing or incompatible.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - A required tool is not installed
+    /// - The compiler version is too old for the selected C++ standard
     pub fn check_prerequisites(&self) -> Result<()> {
         self.check_required_tools()?;
         self.check_compiler_version()?;

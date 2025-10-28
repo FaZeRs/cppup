@@ -1,3 +1,8 @@
+//! Project configuration and building components.
+//!
+//! This module provides the core functionality for creating and configuring
+//! C++ projects, including validation, building, and template rendering.
+
 mod builder;
 mod config;
 mod validator;
@@ -6,10 +11,21 @@ pub use builder::ProjectBuilder;
 pub use config::ProjectConfig;
 pub use validator::ProjectValidator;
 
-// Keep enums and other public types here
+/// Build system options for the generated project.
+///
+/// # Examples
+///
+/// ```
+/// use cppup::project::BuildSystem;
+///
+/// let system = BuildSystem::CMake;
+/// assert_eq!(system.to_string(), "cmake");
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub enum BuildSystem {
+    /// CMake build system (recommended for complex projects)
     CMake,
+    /// GNU Make build system
     Make,
 }
 
@@ -22,12 +38,29 @@ impl std::fmt::Display for BuildSystem {
     }
 }
 
+/// License options for the generated project.
+///
+/// Supports common open-source licenses. The license text is automatically
+/// generated based on the selected type.
+///
+/// # Examples
+///
+/// ```
+/// use cppup::project::License;
+///
+/// let license = License::MIT;
+/// assert_eq!(license.to_string(), "MIT");
+/// ```
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone)]
 pub enum License {
+    /// MIT License - Permissive license with minimal restrictions
     MIT,
+    /// Apache License 2.0 - Permissive license with patent grant
     Apache2,
+    /// GNU General Public License v3.0 - Copyleft license
     GPL3,
+    /// BSD 3-Clause License - Permissive license
     BSD3,
 }
 
@@ -42,10 +75,23 @@ impl std::fmt::Display for License {
     }
 }
 
+/// Package manager options for dependency management.
+///
+/// # Examples
+///
+/// ```
+/// use cppup::project::PackageManager;
+///
+/// let pm = PackageManager::Conan;
+/// assert_eq!(pm.to_string(), "conan");
+/// ```
 #[derive(Debug, Clone)]
 pub enum PackageManager {
+    /// Conan package manager (<https://conan.io/>)
     Conan,
+    /// Vcpkg package manager (<https://vcpkg.io/>)
     Vcpkg,
+    /// No package manager
     None,
 }
 
@@ -59,14 +105,45 @@ impl std::fmt::Display for PackageManager {
     }
 }
 
+/// Configuration for code quality and static analysis tools.
+///
+/// Allows enabling multiple static analysis tools for the generated project.
+///
+/// # Examples
+///
+/// ```
+/// use cppup::project::QualityConfig;
+///
+/// let config = QualityConfig::new(&["clang-tidy", "cppcheck"]);
+/// assert!(config.enable_clang_tidy);
+/// assert!(config.enable_cppcheck);
+/// assert!(!config.enable_include_what_you_use);
+/// ```
 #[derive(Debug, Clone)]
 pub struct QualityConfig {
+    /// Enable clang-tidy static analyzer
     pub enable_clang_tidy: bool,
+    /// Enable cppcheck static analyzer
     pub enable_cppcheck: bool,
+    /// Enable include-what-you-use tool
     pub enable_include_what_you_use: bool,
 }
 
 impl QualityConfig {
+    /// Creates a new QualityConfig from a list of tool names.
+    ///
+    /// # Arguments
+    ///
+    /// * `tools` - Slice of tool names ("clang-tidy", "cppcheck", "include-what-you-use")
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cppup::project::QualityConfig;
+    ///
+    /// let config = QualityConfig::new(&["clang-tidy"]);
+    /// assert!(config.enable_clang_tidy);
+    /// ```
     pub fn new(tools: &[&str]) -> Self {
         Self {
             enable_clang_tidy: tools.contains(&"clang-tidy"),
@@ -94,13 +171,43 @@ impl std::fmt::Display for QualityConfig {
     }
 }
 
+/// Configuration for code formatting tools.
+///
+/// Supports multiple formatting tools for different file types.
+///
+/// # Examples
+///
+/// ```
+/// use cppup::project::CodeFormatter;
+///
+/// let formatter = CodeFormatter::new(&["clang-format", "cmake-format"]);
+/// assert!(formatter.enable_clang_format);
+/// assert!(formatter.enable_cmake_format);
+/// ```
 #[derive(Debug, Clone)]
 pub struct CodeFormatter {
+    /// Enable clang-format for C++ code
     pub enable_clang_format: bool,
+    /// Enable cmake-format for CMake files
     pub enable_cmake_format: bool,
 }
 
 impl CodeFormatter {
+    /// Creates a new CodeFormatter from a list of tool names.
+    ///
+    /// # Arguments
+    ///
+    /// * `tools` - Slice of formatter names ("clang-format", "cmake-format")
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cppup::project::CodeFormatter;
+    ///
+    /// let formatter = CodeFormatter::new(&["clang-format"]);
+    /// assert!(formatter.enable_clang_format);
+    /// assert!(!formatter.enable_cmake_format);
+    /// ```
     pub fn new(tools: &[&str]) -> Self {
         Self {
             enable_clang_format: tools.contains(&"clang-format"),
@@ -124,12 +231,27 @@ impl std::fmt::Display for CodeFormatter {
     }
 }
 
+/// Testing framework options for the generated project.
+///
+/// # Examples
+///
+/// ```
+/// use cppup::project::TestFramework;
+///
+/// let framework = TestFramework::Doctest;
+/// assert_eq!(framework.to_string(), "doctest");
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub enum TestFramework {
+    /// doctest - Fast, header-only testing framework
     Doctest,
+    /// Google Test - Google's C++ testing framework
     GTest,
+    /// Catch2 - Modern, header-only testing framework
     Catch2,
+    /// Boost.Test - Part of the Boost library collection
     BoostTest,
+    /// No testing framework
     None,
 }
 

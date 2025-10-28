@@ -9,27 +9,61 @@ use std::path::PathBuf;
 const DEFAULT_VERSION: &str = "0.1.0";
 const DEFAULT_DESCRIPTION: &str = "A C++ project generated with cppup";
 
+/// Complete configuration for a C++ project.
+///
+/// This structure holds all settings needed to generate a C++ project,
+/// including build system, testing framework, package manager, and quality tools.
+///
+/// # Examples
+///
+/// ```no_run
+/// use cppup::ProjectConfig;
+///
+/// // Interactive mode - prompts user for all options
+/// // let config = ProjectConfig::new(None)?;
+///
+/// // Non-interactive mode - uses CLI arguments
+/// // let cli = Cli::parse();
+/// // let config = ProjectConfig::new(Some(&cli))?;
+/// ```
 #[derive(Debug, Clone)]
 pub struct ProjectConfig {
+    /// Project name (used for directory and CMake project name)
     pub name: String,
+    /// Project description
     pub description: String,
+    /// Type of project (executable or library)
     pub project_type: ProjectType,
+    /// Build system to use
     pub build_system: BuildSystem,
+    /// C++ standard version
     pub cpp_standard: CppStandard,
+    /// Testing framework
     pub test_framework: TestFramework,
+    /// Package manager for dependencies
     pub package_manager: PackageManager,
+    /// License type
     pub license: License,
+    /// Whether to initialize a git repository
     pub use_git: bool,
+    /// Directory path where the project will be created
     pub path: PathBuf,
+    /// Project author name
     pub author: String,
+    /// Project version
     pub version: String,
+    /// Code quality tools configuration
     pub quality_config: QualityConfig,
+    /// Code formatter configuration
     pub code_formatter: CodeFormatter,
 }
 
+/// Type of C++ project to generate.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProjectType {
+    /// Standard executable application
     Executable,
+    /// Static or dynamic library
     Library,
 }
 
@@ -42,12 +76,18 @@ impl std::fmt::Display for ProjectType {
     }
 }
 
+/// C++ language standard version.
 #[derive(Debug, Clone)]
 pub enum CppStandard {
+    /// C++11 standard
     Cpp11,
+    /// C++14 standard
     Cpp14,
+    /// C++17 standard
     Cpp17,
+    /// C++20 standard
     Cpp20,
+    /// C++23 standard
     Cpp23,
 }
 
@@ -232,6 +272,41 @@ fn create_config_from_cli(cli: &Cli) -> Result<ProjectConfig> {
 }
 
 impl ProjectConfig {
+    /// Creates a new project configuration.
+    ///
+    /// This method can work in two modes:
+    /// - **Interactive mode**: Prompts the user for all configuration options
+    /// - **Non-interactive mode**: Uses CLI arguments to configure the project
+    ///
+    /// # Arguments
+    ///
+    /// * `defaults` - Optional CLI arguments. If `None`, uses interactive mode.
+    ///   If provided with `non_interactive` flag, uses CLI values without prompting.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the `ProjectConfig` or an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Project name is invalid
+    /// - Project directory already exists
+    /// - Required CLI arguments are missing in non-interactive mode
+    /// - User cancels interactive prompts
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use cppup::ProjectConfig;
+    ///
+    /// // Interactive mode
+    /// // let config = ProjectConfig::new(None)?;
+    ///
+    /// // Non-interactive mode with CLI
+    /// // let cli = Cli::parse();
+    /// // let config = ProjectConfig::new(Some(&cli))?;
+    /// ```
     pub fn new(defaults: Option<&Cli>) -> Result<Self> {
         if let Some(default) = defaults {
             if default.non_interactive {

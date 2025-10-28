@@ -1,37 +1,112 @@
+//! Template rendering functionality for generating project files.
+//!
+//! This module provides the template engine for rendering Handlebars templates
+//! to generate C++ project files, build scripts, and configuration files.
+
 use anyhow::{Context, Result};
 use handlebars::Handlebars;
 use serde::Serialize;
 use std::fs;
 use std::path::Path;
 
+/// Data structure containing all template variables for project generation.
+///
+/// This struct is serialized and passed to Handlebars templates to render
+/// project-specific content.
 #[derive(Serialize)]
 pub struct ProjectTemplateData {
+    /// Project name
     pub name: String,
+    /// C++ standard version (11, 14, 17, 20, 23)
     pub cpp_standard: String,
+    /// Whether this is a library project
     pub is_library: bool,
+    /// C++ namespace (project name with hyphens replaced by underscores)
     pub namespace: String,
+    /// Build system name
     pub build_system: String,
+    /// Project description
     pub description: String,
+    /// Author name
     pub author: String,
+    /// Project version
     pub version: String,
+    /// Current year for copyright notices
     pub year: String,
+    /// Whether tests are enabled
     pub enable_tests: bool,
+    /// Test framework name
     pub test_framework: String,
+    /// Package manager name
     pub package_manager: String,
+    /// Quality tools configuration string
     pub quality_config: String,
+    /// Code formatter configuration string
     pub code_formatter: String,
 }
 
+/// Template renderer using Handlebars.
+///
+/// This renderer loads all embedded templates and provides methods to render
+/// them with project-specific data.
+///
+/// # Examples
+///
+/// ```no_run
+/// use cppup::TemplateRenderer;
+/// use std::path::Path;
+///
+/// let renderer = TemplateRenderer::new();
+/// // let data = ...; // ProjectTemplateData
+/// // renderer.render("main.cpp", &data, Path::new("src/main.cpp"))?;
+/// ```
 pub struct TemplateRenderer {
     registry: Handlebars<'static>,
 }
 
 impl TemplateRenderer {
+    /// Creates a new TemplateRenderer with all templates loaded.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cppup::TemplateRenderer;
+    ///
+    /// let renderer = TemplateRenderer::new();
+    /// ```
     pub fn new() -> Self {
         Self {
             registry: create_template_registry(),
         }
     }
+    /// Renders a template with the given data and writes it to a file.
+    ///
+    /// # Arguments
+    ///
+    /// * `template_name` - Name of the template to render (without .hbs extension)
+    /// * `data` - Data to pass to the template
+    /// * `output_path` - Path where the rendered file will be written
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` on success, or an error if rendering or writing fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Template rendering fails
+    /// - File cannot be written
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use cppup::TemplateRenderer;
+    /// use std::path::Path;
+    ///
+    /// let renderer = TemplateRenderer::new();
+    /// // let data = ...; // ProjectTemplateData
+    /// // renderer.render("main.cpp", &data, Path::new("src/main.cpp"))?;
+    /// ```
     pub fn render<T: Serialize>(
         &self,
         template_name: &str,
