@@ -349,3 +349,110 @@ impl ProjectBuilder {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::project::config::CppStandard;
+    use crate::project::{CodeFormatter, License, QualityConfig};
+
+    fn create_test_config() -> ProjectConfig {
+        ProjectConfig {
+            name: "test-project".to_string(),
+            description: "A test project".to_string(),
+            project_type: ProjectType::Executable,
+            build_system: BuildSystem::CMake,
+            cpp_standard: CppStandard::Cpp17,
+            test_framework: TestFramework::Doctest,
+            package_manager: PackageManager::Conan,
+            license: License::MIT,
+            use_git: true,
+            path: std::path::PathBuf::from("/tmp/test-project"),
+            author: "Test Author".to_string(),
+            version: "1.0.0".to_string(),
+            quality_config: QualityConfig::new(&["clang-tidy", "cppcheck"]),
+            code_formatter: CodeFormatter::new(&["clang-format"]),
+        }
+    }
+
+    #[test]
+    fn test_create_template_data_executable() {
+        let config = create_test_config();
+        let data = create_template_data(&config);
+
+        assert_eq!(data.name, "test-project");
+        assert_eq!(data.cpp_standard, "17");
+        assert_eq!(data.is_library, false);
+        assert_eq!(data.namespace, "test_project");
+        assert_eq!(data.build_system, "cmake");
+        assert_eq!(data.description, "A test project");
+        assert_eq!(data.author, "Test Author");
+        assert_eq!(data.version, "1.0.0");
+        assert_eq!(data.enable_tests, true);
+        assert_eq!(data.test_framework, "doctest");
+        assert_eq!(data.package_manager, "conan");
+    }
+
+    #[test]
+    fn test_create_template_data_library() {
+        let mut config = create_test_config();
+        config.project_type = ProjectType::Library;
+        let data = create_template_data(&config);
+
+        assert_eq!(data.is_library, true);
+        assert_eq!(data.name, "test-project");
+    }
+
+    #[test]
+    fn test_create_template_data_namespace_conversion() {
+        let mut config = create_test_config();
+        config.name = "my-awesome-project".to_string();
+        let data = create_template_data(&config);
+
+        assert_eq!(data.namespace, "my_awesome_project");
+    }
+
+    #[test]
+    fn test_create_template_data_no_tests() {
+        let mut config = create_test_config();
+        config.test_framework = TestFramework::None;
+        let data = create_template_data(&config);
+
+        assert_eq!(data.enable_tests, false);
+        assert_eq!(data.test_framework, "none");
+    }
+
+    #[test]
+    fn test_create_template_data_different_standards() {
+        let mut config = create_test_config();
+        config.cpp_standard = CppStandard::Cpp20;
+        let data = create_template_data(&config);
+        assert_eq!(data.cpp_standard, "20");
+
+        config.cpp_standard = CppStandard::Cpp11;
+        let data = create_template_data(&config);
+        assert_eq!(data.cpp_standard, "11");
+    }
+
+    #[test]
+    fn test_create_template_data_package_managers() {
+        let mut config = create_test_config();
+
+        config.package_manager = PackageManager::Vcpkg;
+        let data = create_template_data(&config);
+        assert_eq!(data.package_manager, "vcpkg");
+
+        config.package_manager = PackageManager::None;
+        let data = create_template_data(&config);
+        assert_eq!(data.package_manager, "none");
+    }
+
+    #[test]
+    fn test_project_builder_creation() {
+        let config = create_test_config();
+        let builder = ProjectBuilder::new(config.clone());
+
+        assert_eq!(builder.config.name, "test-project");
+        assert_eq!(builder.template_data.name, "test-project");
+    }
+}

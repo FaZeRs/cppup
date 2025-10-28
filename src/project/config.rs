@@ -466,3 +466,75 @@ impl ProjectConfig {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_project_name_valid() {
+        assert!(validate_project_name("my-project").is_ok());
+        assert!(validate_project_name("my_project").is_ok());
+        assert!(validate_project_name("MyProject123").is_ok());
+        assert!(validate_project_name("a").is_ok());
+    }
+
+    #[test]
+    fn test_validate_project_name_empty() {
+        let result = validate_project_name("");
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Project name cannot be empty"
+        );
+    }
+
+    #[test]
+    fn test_validate_project_name_starts_with_number() {
+        let result = validate_project_name("123project");
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Project name cannot start with a number"
+        );
+    }
+
+    #[test]
+    fn test_validate_project_name_invalid_characters() {
+        let result = validate_project_name("my project!");
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Project name can only contain alphanumeric characters, '-' and '_'"
+        );
+    }
+
+    #[test]
+    fn test_validate_project_name_too_long() {
+        let long_name = "a".repeat(101);
+        let result = validate_project_name(&long_name);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "Project name is too long");
+    }
+
+    #[test]
+    fn test_validate_project_name_exactly_100_chars() {
+        let name = "a".repeat(100);
+        assert!(validate_project_name(&name).is_ok());
+    }
+
+    #[test]
+    fn test_cpp_standard_display() {
+        assert_eq!(CppStandard::Cpp11.to_string(), "11");
+        assert_eq!(CppStandard::Cpp14.to_string(), "14");
+        assert_eq!(CppStandard::Cpp17.to_string(), "17");
+        assert_eq!(CppStandard::Cpp20.to_string(), "20");
+        assert_eq!(CppStandard::Cpp23.to_string(), "23");
+    }
+
+    #[test]
+    fn test_project_type_display() {
+        assert_eq!(ProjectType::Executable.to_string(), "executable");
+        assert_eq!(ProjectType::Library.to_string(), "library");
+    }
+}

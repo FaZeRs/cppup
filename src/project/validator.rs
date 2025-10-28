@@ -111,3 +111,83 @@ impl ProjectValidator {
             .ok()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::project::config::{CppStandard, ProjectType};
+    use crate::project::{CodeFormatter, License, QualityConfig, TestFramework};
+    use std::path::PathBuf;
+
+    fn create_test_config() -> ProjectConfig {
+        ProjectConfig {
+            name: "test-project".to_string(),
+            description: "Test project".to_string(),
+            project_type: ProjectType::Executable,
+            build_system: BuildSystem::CMake,
+            cpp_standard: CppStandard::Cpp17,
+            test_framework: TestFramework::None,
+            package_manager: PackageManager::None,
+            license: License::MIT,
+            use_git: false,
+            path: PathBuf::from("/tmp/test-project"),
+            author: "Test Author".to_string(),
+            version: "0.1.0".to_string(),
+            quality_config: QualityConfig::new(&[]),
+            code_formatter: CodeFormatter::new(&[]),
+        }
+    }
+
+    #[test]
+    fn test_extract_gcc_version_valid() {
+        let version_string = "g++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0";
+        let version = ProjectValidator::extract_gcc_version(version_string);
+        assert_eq!(version, Some(11.4));
+    }
+
+    #[test]
+    fn test_extract_gcc_version_different_format() {
+        let version_string = "g++ (GCC) 12.2.0";
+        let version = ProjectValidator::extract_gcc_version(version_string);
+        assert_eq!(version, Some(12.2));
+    }
+
+    #[test]
+    fn test_extract_gcc_version_invalid() {
+        let version_string = "invalid version string";
+        let version = ProjectValidator::extract_gcc_version(version_string);
+        assert_eq!(version, None);
+    }
+
+    #[test]
+    fn test_extract_gcc_version_no_number() {
+        let version_string = "g++ version unknown";
+        let version = ProjectValidator::extract_gcc_version(version_string);
+        assert_eq!(version, None);
+    }
+
+    #[test]
+    fn test_validator_creation() {
+        let config = create_test_config();
+        let validator = ProjectValidator::new(config.clone());
+        assert_eq!(validator.config.name, "test-project");
+    }
+
+    #[test]
+    fn test_cpp_standard_version_requirements() {
+        // Test that we can access the required version logic through the type
+        let cpp11_config = ProjectConfig {
+            cpp_standard: CppStandard::Cpp11,
+            ..create_test_config()
+        };
+        let validator11 = ProjectValidator::new(cpp11_config);
+        assert!(matches!(validator11.config.cpp_standard, CppStandard::Cpp11));
+
+        let cpp23_config = ProjectConfig {
+            cpp_standard: CppStandard::Cpp23,
+            ..create_test_config()
+        };
+        let validator23 = ProjectValidator::new(cpp23_config);
+        assert!(matches!(validator23.config.cpp_standard, CppStandard::Cpp23));
+    }
+}

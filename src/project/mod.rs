@@ -144,3 +144,95 @@ impl std::fmt::Display for TestFramework {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build_system_display() {
+        assert_eq!(BuildSystem::CMake.to_string(), "cmake");
+        assert_eq!(BuildSystem::Make.to_string(), "make");
+    }
+
+    #[test]
+    fn test_license_display() {
+        assert_eq!(License::MIT.to_string(), "MIT");
+        assert_eq!(License::Apache2.to_string(), "Apache-2.0");
+        assert_eq!(License::GPL3.to_string(), "GPL-3.0");
+        assert_eq!(License::BSD3.to_string(), "BSD-3-Clause");
+    }
+
+    #[test]
+    fn test_package_manager_display() {
+        assert_eq!(PackageManager::Conan.to_string(), "conan");
+        assert_eq!(PackageManager::Vcpkg.to_string(), "vcpkg");
+        assert_eq!(PackageManager::None.to_string(), "none");
+    }
+
+    #[test]
+    fn test_quality_config_new() {
+        let config = QualityConfig::new(&["clang-tidy", "cppcheck"]);
+        assert!(config.enable_clang_tidy);
+        assert!(config.enable_cppcheck);
+        assert!(!config.enable_include_what_you_use);
+
+        let empty_config = QualityConfig::new(&[]);
+        assert!(!empty_config.enable_clang_tidy);
+        assert!(!empty_config.enable_cppcheck);
+        assert!(!empty_config.enable_include_what_you_use);
+
+        let all_config = QualityConfig::new(&["clang-tidy", "cppcheck", "include-what-you-use"]);
+        assert!(all_config.enable_clang_tidy);
+        assert!(all_config.enable_cppcheck);
+        assert!(all_config.enable_include_what_you_use);
+    }
+
+    #[test]
+    fn test_quality_config_display() {
+        let config = QualityConfig::new(&["clang-tidy", "cppcheck"]);
+        assert_eq!(config.to_string(), "clang-tidy, cppcheck");
+
+        let empty_config = QualityConfig::new(&[]);
+        assert_eq!(empty_config.to_string(), "");
+
+        let single_config = QualityConfig::new(&["cppcheck"]);
+        assert_eq!(single_config.to_string(), "cppcheck");
+    }
+
+    #[test]
+    fn test_code_formatter_new() {
+        let formatter = CodeFormatter::new(&["clang-format"]);
+        assert!(formatter.enable_clang_format);
+        assert!(!formatter.enable_cmake_format);
+
+        let empty_formatter = CodeFormatter::new(&[]);
+        assert!(!empty_formatter.enable_clang_format);
+        assert!(!empty_formatter.enable_cmake_format);
+
+        let all_formatter = CodeFormatter::new(&["clang-format", "cmake-format"]);
+        assert!(all_formatter.enable_clang_format);
+        assert!(all_formatter.enable_cmake_format);
+    }
+
+    #[test]
+    fn test_code_formatter_display() {
+        let formatter = CodeFormatter::new(&["clang-format", "cmake-format"]);
+        assert_eq!(formatter.to_string(), "clang-format, cmake-format");
+
+        let empty_formatter = CodeFormatter::new(&[]);
+        assert_eq!(empty_formatter.to_string(), "");
+
+        let single_formatter = CodeFormatter::new(&["cmake-format"]);
+        assert_eq!(single_formatter.to_string(), "cmake-format");
+    }
+
+    #[test]
+    fn test_test_framework_display() {
+        assert_eq!(TestFramework::Doctest.to_string(), "doctest");
+        assert_eq!(TestFramework::GTest.to_string(), "gtest");
+        assert_eq!(TestFramework::Catch2.to_string(), "catch2");
+        assert_eq!(TestFramework::BoostTest.to_string(), "boost");
+        assert_eq!(TestFramework::None.to_string(), "none");
+    }
+}
