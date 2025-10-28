@@ -181,13 +181,19 @@ mod tests {
             ..create_test_config()
         };
         let validator11 = ProjectValidator::new(cpp11_config);
-        assert!(matches!(validator11.config.cpp_standard, CppStandard::Cpp11));
+        assert!(matches!(
+            validator11.config.cpp_standard,
+            CppStandard::Cpp11
+        ));
 
         let cpp23_config = ProjectConfig {
             cpp_standard: CppStandard::Cpp23,
             ..create_test_config()
         };
         let validator23 = ProjectValidator::new(cpp23_config);
-        assert!(matches!(validator23.config.cpp_standard, CppStandard::Cpp23));
+        assert!(matches!(
+            validator23.config.cpp_standard,
+            CppStandard::Cpp23
+        ));
     }
 }
