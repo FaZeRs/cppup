@@ -382,13 +382,13 @@ mod tests {
 
         assert_eq!(data.name, "test-project");
         assert_eq!(data.cpp_standard, "17");
-        assert_eq!(data.is_library, false);
+        assert!(!data.is_library);
         assert_eq!(data.namespace, "test_project");
         assert_eq!(data.build_system, "cmake");
         assert_eq!(data.description, "A test project");
         assert_eq!(data.author, "Test Author");
         assert_eq!(data.version, "1.0.0");
-        assert_eq!(data.enable_tests, true);
+        assert!(data.enable_tests);
         assert_eq!(data.test_framework, "doctest");
         assert_eq!(data.package_manager, "conan");
     }
@@ -399,7 +399,7 @@ mod tests {
         config.project_type = ProjectType::Library;
         let data = create_template_data(&config);
 
-        assert_eq!(data.is_library, true);
+        assert!(data.is_library);
         assert_eq!(data.name, "test-project");
     }
 
@@ -418,7 +418,7 @@ mod tests {
         config.test_framework = TestFramework::None;
         let data = create_template_data(&config);
 
-        assert_eq!(data.enable_tests, false);
+        assert!(!data.enable_tests);
         assert_eq!(data.test_framework, "none");
     }
 
