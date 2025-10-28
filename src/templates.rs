@@ -57,6 +57,12 @@ impl TemplateRenderer {
     }
 }
 
+impl Default for TemplateRenderer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn contains_helper(
     h: &handlebars::Helper,
     _: &Handlebars,
@@ -64,23 +70,19 @@ fn contains_helper(
     _: &mut handlebars::RenderContext,
     out: &mut dyn handlebars::Output,
 ) -> handlebars::HelperResult {
-    let list = h.param(0)
-        .and_then(|p| p.value().as_str())
-        .unwrap_or("");
-    
-    let value = h.param(1)
-        .and_then(|p| p.value().as_str())
-        .unwrap_or("");
+    let list = h.param(0).and_then(|p| p.value().as_str()).unwrap_or("");
+
+    let value = h.param(1).and_then(|p| p.value().as_str()).unwrap_or("");
 
     let contains = list.split(',').any(|item| item.trim() == value);
-    
+
     // Return boolean value for Handlebars #if helper
     if contains {
         out.write("true")?;
     } else {
         out.write("")?; // Empty string is falsy in Handlebars
     }
-    
+
     Ok(())
 }
 
@@ -97,21 +99,36 @@ fn create_template_registry() -> Handlebars<'static> {
             "CMakeLists.txt",
             include_str!("../templates/cmake/CMakeLists.txt.hbs"),
         ),
-        ("options.cmake", include_str!("../templates/cmake/options.cmake.hbs")),
-        ("compilation-flags.cmake", include_str!("../templates/cmake/compilation-flags.cmake.hbs")),
-        ("source.cmake", include_str!("../templates/cmake/source.cmake.hbs")),
+        (
+            "options.cmake",
+            include_str!("../templates/cmake/options.cmake.hbs"),
+        ),
+        (
+            "compilation-flags.cmake",
+            include_str!("../templates/cmake/compilation-flags.cmake.hbs"),
+        ),
+        (
+            "source.cmake",
+            include_str!("../templates/cmake/source.cmake.hbs"),
+        ),
         ("Makefile", include_str!("../templates/Makefile.hbs")),
         ("header.hpp", include_str!("../templates/header.hpp.hbs")),
         ("library.cpp", include_str!("../templates/library.cpp.hbs")),
         ("example.cpp", include_str!("../templates/example.cpp.hbs")),
-        ("example.cmake", include_str!("../templates/cmake/example.cmake.hbs")),
+        (
+            "example.cmake",
+            include_str!("../templates/cmake/example.cmake.hbs"),
+        ),
         ("gitignore", include_str!("../templates/gitignore.hbs")),
         ("README.md", include_str!("../templates/README.md.hbs")),
         (
             "conanfile.txt",
             include_str!("../templates/package-managers/conanfile.txt.hbs"),
         ),
-        ("vcpkg.json", include_str!("../templates/package-managers/vcpkg.json.hbs")),
+        (
+            "vcpkg.json",
+            include_str!("../templates/package-managers/vcpkg.json.hbs"),
+        ),
         ("MIT", include_str!("../templates/licenses/MIT.hbs")),
         ("GPL-3.0", include_str!("../templates/licenses/GPL-3.0.hbs")),
         (
@@ -126,13 +143,22 @@ fn create_template_registry() -> Handlebars<'static> {
             "clang-format",
             include_str!("../templates/formatters/clang-format.hbs"),
         ),
-        ("cmake-format", include_str!("../templates/formatters/cmake-format.yaml.hbs")),
-        ("clang-tidy", include_str!("../templates/static-analyzers/clang-tidy.hbs")),
+        (
+            "cmake-format",
+            include_str!("../templates/formatters/cmake-format.yaml.hbs"),
+        ),
+        (
+            "clang-tidy",
+            include_str!("../templates/static-analyzers/clang-tidy.hbs"),
+        ),
         (
             "cppcheck-suppressions.xml",
             include_str!("../templates/static-analyzers/cppcheck-suppressions.xml.hbs"),
         ),
-        ("tests.cmake", include_str!("../templates/tests/tests.cmake.hbs")),
+        (
+            "tests.cmake",
+            include_str!("../templates/tests/tests.cmake.hbs"),
+        ),
         (
             "boost_test_main.cpp",
             include_str!("../templates/tests/boost_test_main.cpp.hbs"),
@@ -261,15 +287,20 @@ mod tests {
         // Test template that uses the contains helper
         let template = "{{#if (contains quality_config 'clang-tidy')}}clang-tidy enabled{{/if}}";
         let mut handlebars = Handlebars::new();
-        handlebars.register_template_string("test_contains", template).unwrap();
+        handlebars
+            .register_template_string("test_contains", template)
+            .unwrap();
         handlebars.register_helper("contains", Box::new(contains_helper));
 
         let result = handlebars.render("test_contains", &data).unwrap();
         assert_eq!(result, "clang-tidy enabled");
 
         // Test with value not in list
-        let template2 = "{{#if (contains quality_config 'include-what-you-use')}}iwyu enabled{{/if}}";
-        handlebars.register_template_string("test_contains2", template2).unwrap();
+        let template2 =
+            "{{#if (contains quality_config 'include-what-you-use')}}iwyu enabled{{/if}}";
+        handlebars
+            .register_template_string("test_contains2", template2)
+            .unwrap();
         let result2 = handlebars.render("test_contains2", &data).unwrap();
         assert_eq!(result2, "");
     }

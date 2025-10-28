@@ -22,6 +22,7 @@ impl std::fmt::Display for BuildSystem {
     }
 }
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone)]
 pub enum License {
     MIT,
@@ -78,7 +79,7 @@ impl QualityConfig {
 impl std::fmt::Display for QualityConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut tools = Vec::new();
-        
+
         if self.enable_clang_tidy {
             tools.push("clang-tidy");
         }
@@ -88,7 +89,7 @@ impl std::fmt::Display for QualityConfig {
         if self.enable_include_what_you_use {
             tools.push("include-what-you-use");
         }
-        
+
         write!(f, "{}", tools.join(", "))
     }
 }
@@ -98,7 +99,6 @@ pub struct CodeFormatter {
     pub enable_clang_format: bool,
     pub enable_cmake_format: bool,
 }
-
 
 impl CodeFormatter {
     pub fn new(tools: &[&str]) -> Self {
@@ -112,14 +112,14 @@ impl CodeFormatter {
 impl std::fmt::Display for CodeFormatter {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut tools = Vec::new();
-        
+
         if self.enable_clang_format {
             tools.push("clang-format");
         }
         if self.enable_cmake_format {
             tools.push("cmake-format");
         }
-        
+
         write!(f, "{}", tools.join(", "))
     }
 }
