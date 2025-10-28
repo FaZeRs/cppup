@@ -146,13 +146,13 @@ impl ProjectBuilder {
             &self.template_data,
             &self.config.path.join("cmake/options.cmake"),
         )?;
-        
+
         self.template_renderer.render(
             "compilation-flags.cmake",
             &self.template_data,
             &self.config.path.join("cmake/compilation-flags.cmake"),
         )?;
-        
+
         self.template_renderer.render(
             "source.cmake",
             &self.template_data,
@@ -166,8 +166,7 @@ impl ProjectBuilder {
                 &self.config.path.join("examples/CMakeLists.txt"),
             )?;
         }
-        
-        
+
         Ok(())
     }
 
@@ -221,7 +220,7 @@ impl ProjectBuilder {
                 self.template_renderer.render(
                     "tests.cmake",
                     &self.template_data,
-        &self.config.path.join("tests/CMakeLists.txt"),
+                    &self.config.path.join("tests/CMakeLists.txt"),
                 )?;
             }
 
