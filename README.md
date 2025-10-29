@@ -1,7 +1,7 @@
 # cppup
 
-[![codecov](https://codecov.io/gh/USERNAME/cppup/branch/master/graph/badge.svg)](https://codecov.io/gh/USERNAME/cppup)
-[![CI](https://github.com/USERNAME/cppup/workflows/CI/badge.svg)](https://github.com/USERNAME/cppup/actions)
+[![codecov](https://codecov.io/gh/fazers/cppup/branch/master/graph/badge.svg)](https://codecov.io/gh/fazers/cppup)
+[![CI](https://github.com/fazers/cppup/workflows/CI/badge.svg)](https://github.com/UfazersSERNAME/cppup/actions)
 
 A powerful and interactive C++ project generator written in Rust. It helps you quickly set up new C++ projects with modern best practices and your preferred configurations.
 
