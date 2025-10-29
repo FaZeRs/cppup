@@ -1,5 +1,8 @@
 # cppup
 
+[![codecov](https://codecov.io/gh/USERNAME/cppup/branch/master/graph/badge.svg)](https://codecov.io/gh/USERNAME/cppup)
+[![CI](https://github.com/USERNAME/cppup/workflows/CI/badge.svg)](https://github.com/USERNAME/cppup/actions)
+
 A powerful and interactive C++ project generator written in Rust. It helps you quickly set up new C++ projects with modern best practices and your preferred configurations.
 
 ## Features
@@ -24,6 +27,48 @@ A powerful and interactive C++ project generator written in Rust. It helps you q
 
 ```bash
 cargo build
+```
+
+## Development
+
+### Running Tests
+
+```bash
+cargo test
+```
+
+### Code Coverage
+
+Generate code coverage reports locally:
+
+```bash
+# Install cargo-tarpaulin
+cargo install cargo-tarpaulin
+
+# Generate coverage report
+cargo tarpaulin --out Html
+
+# Open coverage report
+open tarpaulin-report.html
+```
+
+### Pre-commit Hooks
+
+This project includes pre-commit hooks that run code formatting and linting checks before each commit. To install them:
+
+```bash
+./hooks/install-hooks.sh
+```
+
+The pre-commit hook will automatically:
+
+- Check code formatting with `cargo fmt`
+- Run linting checks with `cargo clippy`
+
+If you need to commit without running the hooks (not recommended), use:
+
+```bash
+git commit --no-verify
 ```
 
 ## Usage
@@ -74,7 +119,7 @@ cppup --name my-project \
 
 Generated project structure for an executable:
 
-```
+```text
 my-project/
 ├── src/
 │   └── main.cpp
@@ -90,7 +135,7 @@ my-project/
 
 For a library:
 
-```
+```text
 my-project/
 ├── src/
 │   └── lib.cpp

@@ -1,0 +1,32 @@
+[config]
+# Tarpaulin configuration for code coverage
+
+# Run coverage only on library and binary code
+run-types = ["Tests"]
+
+# Output formats (Html generation is slower)
+out = ["Lcov"]
+
+# Exclude patterns
+exclude-files = ["tests/*", "*/tests/*"]
+
+# Timeout for tests (in seconds)
+timeout = "300s"
+
+# Follow symbolic links
+follow-exec = true
+
+# Count hits in test files
+count = true
+
+# Include all features
+all-features = true
+
+# Continue on test failures
+ignore-panics = false
+
+# Forward signals to child processes
+forward-signals = true
+
+# Run in release mode (faster, less instrumentation overhead)
+release = true
