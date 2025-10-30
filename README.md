@@ -43,13 +43,13 @@ Generate code coverage reports locally:
 
 ```bash
 # Install cargo-tarpaulin
-cargo install cargo-tarpaulin
+cargo install cargo-llvm-cov
 
-# Generate coverage report
-cargo tarpaulin --out Html
+# Print the coverage summary to stdout
+cargo llvm-cov
 
 # Open coverage report
-open tarpaulin-report.html
+cargo llvm-cov --open
 ```
 
 ### Pre-commit Hooks
